@@ -2,6 +2,9 @@ from pydantic_settings import BaseSettings
 from pathlib import Path
 import os
 
+# Base directory of the backend-ml package (i.e. backend-ml/)
+_BASE_DIR = Path(__file__).parent.parent.parent
+
 
 class Settings(BaseSettings):
     # Server
@@ -10,11 +13,11 @@ class Settings(BaseSettings):
     ml_workers: int = 1
 
     # Upload storage
-    ml_upload_dir: str = str(Path(__file__).parent.parent.parent / "uploads")
+    ml_upload_dir: str = str(_BASE_DIR / "uploads")
 
-    # FAISS index persistence
-    faiss_index_path: str = str(Path(__file__).parent.parent / "storage" / "index" / "turtles.index")
-    faiss_id_map_path: str = str(Path(__file__).parent.parent / "storage" / "index" / "id_map.json")
+    # FAISS index persistence (stored inside backend-ml/storage/index/)
+    faiss_index_path: str = str(_BASE_DIR / "storage" / "index" / "turtles.index")
+    faiss_id_map_path: str = str(_BASE_DIR / "storage" / "index" / "id_map.json")
 
     # Model
     ml_model_name: str = "mobilenet_v2"
@@ -27,14 +30,15 @@ class Settings(BaseSettings):
     # Search config
     ml_top_k: int = 5
 
-    class Config:
-        env_file = str(Path(__file__).parent.parent.parent / ".env")
-        extra = "ignore"
+    model_config = {
+        "env_file": str(_BASE_DIR / ".env"),
+        "extra": "ignore",
+    }
 
 
 settings = Settings()
 
-# Ensure required directories exist
+# Ensure required directories exist at startup
 for path_str in [
     settings.ml_upload_dir,
     str(Path(settings.faiss_index_path).parent),

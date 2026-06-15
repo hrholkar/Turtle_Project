@@ -2,6 +2,11 @@
 TurtleTrack ML Service — FastAPI Application Entry Point
 """
 
+# Fix Windows OpenMP conflict between PyTorch and FAISS
+# Must be set BEFORE any torch or faiss import
+import os
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -24,7 +29,7 @@ async def lifespan(app: FastAPI):
     print("[ML] Loading FAISS index...")
     FAISSIndexManager.get_instance()
 
-    print("[ML] ✓ ML Service ready\n")
+    print("[ML] [OK] ML Service ready\n")
     yield
     print("[ML] Shutting down ML Service")
 
@@ -63,10 +68,13 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
+    import os
+    is_dev = os.getenv("ML_WORKERS", "1") == "1" or settings.ml_workers <= 1
     uvicorn.run(
         "main:app",
         host=settings.ml_host,
         port=settings.ml_port,
-        workers=settings.ml_workers,
-        reload=True,
+        # reload=True is incompatible with workers > 1; use only in dev with 1 worker
+        workers=1 if is_dev else settings.ml_workers,
+        reload=is_dev,
     )

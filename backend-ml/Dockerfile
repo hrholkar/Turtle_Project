@@ -1,14 +1,16 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
-# Install system dependencies for OpenCV
+# Install system dependencies for OpenCV and build tools
 RUN apt-get update && apt-get install -y \
     libglib2.0-0 libsm6 libxrender1 libxext6 libgl1-mesa-glx \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Upgrade pip first to handle modern wheel formats (torch 2.6.0+)
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 

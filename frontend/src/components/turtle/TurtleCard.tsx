@@ -3,7 +3,7 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, ViewStyle } from 'reac
 import { Colors, SpeciesLabels } from '../../constants/colors';
 import { TextStyles } from '../../constants/typography';
 import { Spacing, Radii, Shadows } from '../../constants/theme';
-import { YearsBadge } from './Badges';
+import { YearsBadge } from '../ui/Badges';
 import { UPLOADS_BASE_URL } from '../../constants/theme';
 import type { Turtle } from '../../types';
 import { Ionicons } from '@expo/vector-icons';

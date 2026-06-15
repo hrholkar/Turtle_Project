@@ -9,12 +9,12 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, MatchStrengthColors, SpeciesLabels } from '../../src/constants/colors';
-import { TextStyles } from '../../src/constants/typography';
-import { Spacing, Radii, Shadows, UPLOADS_BASE_URL } from '../../src/constants/theme';
-import { ConfidenceBadge, YearsBadge } from '../../src/components/ui/Badges';
-import { Button } from '../../src/components/ui/Button';
-import type { IdentifyResult, MatchStrength } from '../../src/types';
+import { Colors, MatchStrengthColors, SpeciesLabels } from '../src/constants/colors';
+import { TextStyles } from '../src/constants/typography';
+import { Spacing, Radii, Shadows, UPLOADS_BASE_URL } from '../src/constants/theme';
+import { ConfidenceBadge, YearsBadge } from '../src/components/ui/Badges';
+import { Button } from '../src/components/ui/Button';
+import type { IdentifyResult, MatchStrength } from '../src/types';
 
 const matchStrengthMessages: Record<MatchStrength, string> = {
   strong: 'Strong match found — this turtle is in the database.',

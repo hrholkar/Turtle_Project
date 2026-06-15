@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 export const Spacing = {
   xs: 4,
@@ -61,8 +62,51 @@ export const Shadows = {
   }),
 } as const;
 
-export const API_BASE_URL = 'http://localhost:3000/api';
-export const UPLOADS_BASE_URL = 'http://localhost:3000';
+// ── API URL Configuration ─────────────────────────────────────────────────────
+//
+// For Expo Go on a physical device, the phone must reach the backend server.
+// Expo tunnel (--tunnel) only tunnels the Metro bundler port (8081), NOT the
+// backend port. So we use the LAN IP of the development machine.
+//
+// NOTE: Both the phone and the PC must be on the SAME WiFi network.
+// If you change networks, update BACKEND_LAN_IP below.
+//
+const BACKEND_LAN_IP = '192.168.235.49';
+
+function getApiBaseUrl(): string {
+  // In CI/test environments, use localhost
+  if (typeof __DEV__ !== 'undefined' && !__DEV__) {
+    return 'http://localhost:3000/api';
+  }
+
+  // Try to get host from expo-constants (works in LAN mode)
+  const expoHost = Constants.expoConfig?.hostUri;
+  if (expoHost) {
+    const host = expoHost.split(':')[0];
+    // In LAN mode, hostUri has the LAN IP — use it for the backend too
+    if (host && host !== 'localhost' && host !== '127.0.0.1' && !host.includes('.exp.direct')) {
+      return `http://${host}:3000/api`;
+    }
+  }
+
+  // Tunnel mode or fallback: use the hardcoded LAN IP
+  // The phone must be on the same WiFi as the dev machine
+  return `http://${BACKEND_LAN_IP}:3000/api`;
+}
+
+function getUploadsBaseUrl(): string {
+  const expoHost = Constants.expoConfig?.hostUri;
+  if (expoHost) {
+    const host = expoHost.split(':')[0];
+    if (host && host !== 'localhost' && host !== '127.0.0.1' && !host.includes('.exp.direct')) {
+      return `http://${host}:3000`;
+    }
+  }
+  return `http://${BACKEND_LAN_IP}:3000`;
+}
+
+export const API_BASE_URL = getApiBaseUrl();
+export const UPLOADS_BASE_URL = getUploadsBaseUrl();
 
 // Re-export for convenience
 export { UPLOADS_BASE_URL as BASE_URL };
