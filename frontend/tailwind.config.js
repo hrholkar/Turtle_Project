@@ -8,44 +8,51 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // ── TurtleTrack Design System ──────────────────────────────
-        // Deep ocean-inspired palette — professional, research-grade
+        // ── TurtleTrack Design System (Yale Blue) ──────────────────────────────
+        primary: {
+          50: '#e9f4fc',
+          100: '#d3e9f8',
+          200: '#a6d2f2',
+          300: '#7abceb',
+          400: '#4ea6e4',
+          500: '#218fde',
+          600: '#1b73b1',
+          700: '#145685',
+          800: '#0d3959',
+          900: '#071d2c',
+          950: '#05141f',
+        },
         bg: {
-          primary: '#0B1929',      // Deep midnight navy
-          secondary: '#0F2137',    // Card surfaces
-          tertiary: '#162B44',     // Elevated surfaces
-          overlay: '#1A3354',      // Modal overlays
+          primary: '#e9f4fc',      // Yale Blue 50
+          secondary: '#FFFFFF',    // White Cards
+          tertiary: '#d3e9f8',     // Elevated / Subtle background
+          overlay: 'rgba(7, 29, 44, 0.5)', // 900 with opacity
         },
         accent: {
-          teal: '#00D4B4',         // Primary — bioluminescent teal
-          tealDim: '#009B84',      // Pressed/hover state
-          tealSubtle: '#00D4B41A', // Ghost background
-        },
-        warm: {
-          amber: '#F0A030',        // Sighting dates, years
-          amberDim: '#C07820',
-          amberSubtle: '#F0A0301A',
+          blue: '#218fde',         // 500
+          blueDim: '#1b73b1',      // 600
+          blueSubtle: '#d3e9f8',   // 100
         },
         text: {
-          primary: '#E8F4F8',      // Headings, primary content
-          secondary: '#A8C4D8',    // Body text
-          muted: '#6B8FA8',        // Captions, metadata
-          inverse: '#0B1929',      // On-accent text
+          primary: '#071d2c',      // 900
+          secondary: '#145685',    // 700
+          muted: '#1b73b1',        // 600
+          inverse: '#FFFFFF',      // On-primary text
         },
         border: {
-          default: '#1E3A5F',
-          subtle: '#162B44',
-          accent: '#00D4B440',
+          default: '#d3e9f8',      // 100
+          subtle: '#e9f4fc',       // 50
+          accent: '#7abceb',       // 300
         },
         status: {
           success: '#22C55E',
-          successSubtle: '#22C55E1A',
+          successSubtle: '#DCFCE7',
           warning: '#F59E0B',
-          warningSubtle: '#F59E0B1A',
+          warningSubtle: '#FEF3C7',
           error: '#EF4444',
-          errorSubtle: '#EF44441A',
+          errorSubtle: '#FEE2E2',
           pending: '#8B5CF6',
-          pendingSubtle: '#8B5CF61A',
+          pendingSubtle: '#EDE9FE',
         },
       },
       fontFamily: {

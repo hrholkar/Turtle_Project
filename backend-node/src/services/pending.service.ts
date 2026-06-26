@@ -103,15 +103,17 @@ export class PendingService {
 
       resolvedTurtleId = newTurtle.turtleId;
 
-      // Register turtle in ML index
+      // Register turtle in v2 ML index
       if (storage instanceof LocalStorageAdapter) {
         const imgPath = (storage as LocalStorageAdapter).getFilePath('turtles', imageFilename);
-        const pendingWithFeatures = await PendingVerification.findById(id).select('+extractedFeatures').lean();
-        await MLService.register({
-          turtleId: resolvedTurtleId,
+        await MLService.registerNewTurtle({
           imagePath: imgPath,
-          embeddingVector: pendingWithFeatures?.extractedFeatures,
-        }).catch(() => console.warn(`[Pending] ML registration failed for ${resolvedTurtleId}`));
+          identity:  resolvedTurtleId,
+          species:   input.species,
+          imageSide: 'AUTO',
+          location:  pending.submittedLocation ?? '',
+          year:      sightingDate.getFullYear(),
+        }).catch(() => console.warn(`[Pending] ML v2 registration failed for ${resolvedTurtleId}`));
       }
 
       // Create initial sighting

@@ -14,14 +14,108 @@ import { TextStyles } from '../src/constants/typography';
 import { Spacing, Radii, Shadows, UPLOADS_BASE_URL } from '../src/constants/theme';
 import { ConfidenceBadge, YearsBadge } from '../src/components/ui/Badges';
 import { Button } from '../src/components/ui/Button';
+import { Card } from '../src/components/ui/Card';
 import type { IdentifyResult, MatchStrength } from '../src/types';
 
 const matchStrengthMessages: Record<MatchStrength, string> = {
-  strong: 'Strong match found — this turtle is in the database.',
+  strong:   'Strong match found — this turtle is in the database.',
   probable: 'Probable match — please review and verify.',
-  new: 'No matching turtle found — submitted for verification.',
+  new:      'No matching turtle found — submitted for verification.',
 };
 
+// ── Helper: render one top-match row ─────────────────────────────────────────
+function TopMatchRow({
+  rank,
+  identity,
+  similarity,
+  species,
+  firstSeen,
+  latestSeen,
+  location,
+  isTop,
+}: {
+  rank: number;
+  identity: string;
+  similarity: number;   // 0-100 %
+  species?: string;
+  firstSeen?: number;
+  latestSeen?: number;
+  location?: string;
+  isTop: boolean;
+}) {
+  const color = isTop ? Colors.accent.blue : Colors.text.muted;
+  return (
+    <View style={[matchRowStyles.container, isTop && matchRowStyles.topContainer]}>
+      <View style={matchRowStyles.rankBadge}>
+        <Text style={[matchRowStyles.rankText, { color }]}>#{rank}</Text>
+      </View>
+      <View style={{ flex: 1 }}>
+        <View style={matchRowStyles.headerRow}>
+          <Text style={[matchRowStyles.identity, { color }]}>{identity}</Text>
+          <View style={[matchRowStyles.simBadge, { backgroundColor: isTop ? Colors.accent.blue : Colors.bg.tertiary }]}>
+            <Text style={[matchRowStyles.simText, { color: isTop ? '#fff' : Colors.text.secondary }]}>
+              {similarity.toFixed(2)}%
+            </Text>
+          </View>
+        </View>
+        {species && (
+          <Text style={matchRowStyles.meta}>{species}</Text>
+        )}
+        {(firstSeen || latestSeen || location) ? (
+          <Text style={matchRowStyles.metaSub}>
+            {[
+              firstSeen && latestSeen && firstSeen !== latestSeen
+                ? `${firstSeen}–${latestSeen}`
+                : firstSeen
+                ? `${firstSeen}`
+                : null,
+              location || null,
+            ]
+              .filter(Boolean)
+              .join('  ·  ')}
+          </Text>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+const matchRowStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.subtle,
+  },
+  topContainer: {
+    backgroundColor: Colors.accent.blueSubtle,
+    borderRadius: Radii.md,
+    paddingHorizontal: Spacing.sm,
+    borderBottomWidth: 0,
+    marginBottom: 2,
+  },
+  rankBadge: {
+    width: 28,
+    alignItems: 'center',
+    paddingTop: 2,
+  },
+  rankText: { fontFamily: 'monospace', fontSize: 13, fontWeight: '700' },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.sm },
+  identity: { fontFamily: 'monospace', fontSize: 16, fontWeight: '700', flex: 1 },
+  simBadge: {
+    borderRadius: Radii.full,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+  },
+  simText: { fontSize: 12, fontWeight: '700' },
+  meta:    { ...TextStyles.bodySmall, color: Colors.text.secondary, marginTop: 2 },
+  metaSub: { ...TextStyles.label, color: Colors.text.muted, fontSize: 11, marginTop: 1 },
+});
+
+
+// ── Main result screen ─────────────────────────────────────────────────────────
 export default function ResultScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ resultData: string }>();
@@ -39,9 +133,12 @@ export default function ResultScreen() {
     );
   }
 
-  const isMatch = result.type === 'match';
-  const strength = result.matchStrength;
+  const isMatch      = result.type === 'match';
+  const strength     = result.matchStrength;
   const strengthColor = MatchStrengthColors[strength];
+
+  // Extract top-3 matches from allMatches
+  const top3 = result.allMatches?.slice(0, 3) ?? [];
 
   return (
     <ScrollView
@@ -64,12 +161,13 @@ export default function ResultScreen() {
         </View>
       </View>
 
-      {/* ── Match Found Branch ───────────────────────── */}
+      {/* ── Match Found Branch ────────────────────────── */}
       {isMatch && result.turtle && (
         <>
-          <View style={styles.card}>
+          {/* Primary turtle card */}
+          <Card style={styles.card}>
             <View style={styles.cardHeaderRow}>
-              <Text style={styles.cardTitle}>Matched Turtle</Text>
+              <Text style={styles.cardTitle}>Best Match</Text>
               {result.confidence != null && (
                 <ConfidenceBadge score={result.confidence} matchStrength={strength} />
               )}
@@ -104,7 +202,23 @@ export default function ResultScreen() {
                 <YearsBadge years={result.yearsSinceSeen} />
               </View>
             )}
-          </View>
+          </Card>
+
+          {/* Top-3 matches */}
+          {top3.length > 1 && (
+            <Card style={styles.card}>
+              <Text style={styles.cardTitle}>Top {top3.length} Candidates</Text>
+              {top3.map((m, i) => (
+                <TopMatchRow
+                  key={m.turtleId}
+                  rank={i + 1}
+                  identity={m.turtleId}
+                  similarity={parseFloat((m.score * 100).toFixed(2))}
+                  isTop={i === 0}
+                />
+              ))}
+            </Card>
+          )}
 
           <View style={styles.actions}>
             <Button
@@ -112,7 +226,7 @@ export default function ResultScreen() {
               variant="primary"
               size="lg"
               onPress={() => router.push(`/turtle/${result!.turtle!.turtleId}`)}
-              leftIcon={<Ionicons name="fish" size={18} color={Colors.text.inverse} />}
+              leftIcon={<Ionicons name="water" size={18} color={Colors.text.inverse} />}
             />
             <Button
               label="Identify Another"
@@ -124,10 +238,10 @@ export default function ResultScreen() {
         </>
       )}
 
-      {/* ── Pending Branch ────────────────────────────── */}
+      {/* ── Pending / New Turtle Branch ───────────────── */}
       {!isMatch && result.pending && (
         <>
-          <View style={styles.card}>
+          <Card style={styles.card}>
             <Text style={styles.cardTitle}>Submission Status</Text>
 
             <View style={styles.pendingInfo}>
@@ -141,21 +255,24 @@ export default function ResultScreen() {
               </View>
             </View>
 
-            {result.allMatches.length > 0 && (
+            {/* Closest possible matches from top-3 */}
+            {top3.length > 0 && (
               <View style={styles.suggestedSection}>
                 <Text style={styles.suggestedTitle}>
-                  Closest possible matches ({result.allMatches.length})
+                  Closest possible matches ({top3.length})
                 </Text>
-                {result.allMatches.slice(0, 3).map((match, i) => (
-                  <View key={match.turtleId} style={styles.matchRow}>
-                    <Text style={styles.matchRank}>#{match.rank}</Text>
-                    <Text style={styles.matchId}>{match.turtleId}</Text>
-                    <ConfidenceBadge score={match.score} size="sm" />
-                  </View>
+                {top3.map((match, i) => (
+                  <TopMatchRow
+                    key={match.turtleId}
+                    rank={i + 1}
+                    identity={match.turtleId}
+                    similarity={parseFloat((match.score * 100).toFixed(2))}
+                    isTop={false}
+                  />
                 ))}
               </View>
             )}
-          </View>
+          </Card>
 
           <View style={styles.actions}>
             <Button
@@ -163,7 +280,7 @@ export default function ResultScreen() {
               variant="ghost"
               size="lg"
               onPress={() => router.push('/(tabs)/pending')}
-              leftIcon={<Ionicons name="shield-checkmark-outline" size={18} color={Colors.accent.teal} />}
+              leftIcon={<Ionicons name="shield-checkmark-outline" size={18} color={Colors.accent.blue} />}
             />
             <Button
               label="Identify Another"
@@ -176,7 +293,7 @@ export default function ResultScreen() {
       )}
 
       {/* ── Processing Details ───────────────────────── */}
-      <View style={styles.metaCard}>
+      <Card style={styles.metaCard}>
         <Text style={styles.metaTitle}>Processing Details</Text>
         <View style={styles.metaRow}>
           <Text style={styles.metaLabel}>Match type</Text>
@@ -184,17 +301,37 @@ export default function ResultScreen() {
             {strength.charAt(0).toUpperCase() + strength.slice(1)}
           </Text>
         </View>
+        {result.predictedSpecies && (
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Predicted species</Text>
+            <Text style={styles.metaValue} numberOfLines={1}>{result.predictedSpecies}</Text>
+          </View>
+        )}
+        {result.imageSide && (
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Image side</Text>
+            <Text style={styles.metaValue}>{result.imageSide}</Text>
+          </View>
+        )}
         <View style={styles.metaRow}>
           <Text style={styles.metaLabel}>Candidates compared</Text>
-          <Text style={styles.metaValue}>{result.allMatches.length}</Text>
+          <Text style={styles.metaValue}>{result.allMatches?.length ?? 0}</Text>
         </View>
         {result.confidence != null && (
           <View style={styles.metaRow}>
-            <Text style={styles.metaLabel}>Top similarity score</Text>
+            <Text style={styles.metaLabel}>Top similarity</Text>
             <Text style={styles.metaValue}>{Math.round(result.confidence * 100)}%</Text>
           </View>
         )}
-      </View>
+        {result.newIdentity && (
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Auto-assigned ID</Text>
+            <Text style={[styles.metaValue, { color: Colors.accent.blue, fontFamily: 'monospace' }]}>
+              {result.newIdentity}
+            </Text>
+          </View>
+        )}
+      </Card>
 
       <View style={{ height: Spacing['2xl'] }} />
     </ScrollView>
@@ -203,7 +340,7 @@ export default function ResultScreen() {
 
 const styles = StyleSheet.create({
   loading: { flex: 1, backgroundColor: Colors.bg.primary, alignItems: 'center', justifyContent: 'center' },
-  screen: { flex: 1, backgroundColor: Colors.bg.primary },
+  screen:  { flex: 1, backgroundColor: Colors.bg.primary },
   content: { padding: Spacing.base, gap: Spacing.base },
 
   resultHeader: {
@@ -214,23 +351,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: Spacing.base,
   },
-  resultTitle: { fontSize: 20, fontWeight: '700', letterSpacing: -0.3 },
+  resultTitle:    { fontSize: 20, fontWeight: '700', letterSpacing: -0.3 },
   resultSubtitle: { ...TextStyles.bodySmall, color: Colors.text.secondary, marginTop: 2 },
 
   card: {
-    backgroundColor: Colors.bg.secondary,
-    borderRadius: Radii.xl,
-    borderWidth: 1,
-    borderColor: Colors.border.default,
     padding: Spacing.base,
     gap: Spacing.md,
   },
-  cardTitle: { ...TextStyles.h3, color: Colors.text.secondary },
+  cardTitle:     { ...TextStyles.h3, color: Colors.text.secondary },
   cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
 
-  turtleRow: { flexDirection: 'row', gap: Spacing.md, alignItems: 'center' },
-  turtleThumb: { width: 72, height: 72, borderRadius: Radii.md },
-  turtleId: { fontFamily: 'monospace', fontSize: 18, fontWeight: '700', color: Colors.accent.teal },
+  turtleRow:     { flexDirection: 'row', gap: Spacing.md, alignItems: 'center' },
+  turtleThumb:   { width: 72, height: 72, borderRadius: Radii.md },
+  turtleId:      { fontFamily: 'monospace', fontSize: 18, fontWeight: '700', color: Colors.accent.blue },
   turtleSpecies: { ...TextStyles.body, color: Colors.text.secondary },
   turtleSightings: { ...TextStyles.label, color: Colors.text.muted },
 
@@ -248,20 +381,18 @@ const styles = StyleSheet.create({
 
   actions: { gap: Spacing.md },
 
-  pendingInfo: { flexDirection: 'row', gap: Spacing.md, alignItems: 'flex-start' },
-  pendingTitle: { ...TextStyles.h3, color: Colors.status.pending },
+  pendingInfo:    { flexDirection: 'row', gap: Spacing.md, alignItems: 'flex-start' },
+  pendingTitle:   { ...TextStyles.h3, color: Colors.status.pending },
   pendingSubtitle: { ...TextStyles.bodySmall, color: Colors.text.secondary },
-  suggestedSection: { gap: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border.subtle, paddingTop: Spacing.md },
+  suggestedSection: {
+    gap: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border.subtle,
+    paddingTop: Spacing.md,
+  },
   suggestedTitle: { ...TextStyles.label, color: Colors.text.muted },
-  matchRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  matchRank: { ...TextStyles.labelSmall, color: Colors.text.muted, width: 24 },
-  matchId: { ...TextStyles.mono, color: Colors.accent.teal, flex: 1 },
 
   metaCard: {
-    backgroundColor: Colors.bg.secondary,
-    borderRadius: Radii.lg,
-    borderWidth: 1,
-    borderColor: Colors.border.subtle,
     padding: Spacing.base,
     gap: 0,
   },
@@ -274,5 +405,5 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border.subtle,
   },
   metaLabel: { ...TextStyles.bodySmall, color: Colors.text.muted },
-  metaValue: { ...TextStyles.label, color: Colors.text.primary, fontWeight: '600' },
+  metaValue: { ...TextStyles.label,     color: Colors.text.primary, fontWeight: '600' },
 });

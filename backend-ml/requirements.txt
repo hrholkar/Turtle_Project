@@ -1,30 +1,39 @@
 # ============================================================
 # TurtleTrack ML Service — Python Dependencies
-# Python 3.13 compatible versions (updated 2025-06)
+# Python 3.11+ compatible (tested on 3.11 / 3.12 / 3.13)
 # ============================================================
 
-# Web framework
+# ── Web framework ─────────────────────────────────────────
 fastapi==0.115.5
 uvicorn[standard]==0.32.1
 python-multipart==0.0.12
 
-# ML / PyTorch (Python 3.13 compatible — torch 2.6.0+)
+# ── ML / PyTorch ──────────────────────────────────────────
 torch==2.6.0
 torchvision==0.21.0
 
-# Vector similarity search (Python 3.13 compatible — faiss-cpu 1.9.0+)
+# ── Vector similarity search ──────────────────────────────
 faiss-cpu==1.9.0.post1
 
-# Image processing
+# ── Image processing ──────────────────────────────────────
 Pillow==11.0.0
 numpy==2.1.3
 opencv-python-headless==4.10.0.84
 
-# Pydantic / settings
+# ── ML training / classification ──────────────────────────
+scikit-learn==1.5.2
+pandas==2.2.3
+joblib==1.4.2
+scipy==1.14.1
+
+# ── Progress bars (used in generate_embeddings.py) ────────
+tqdm==4.67.1
+
+# ── Pydantic / settings ───────────────────────────────────
 pydantic==2.10.3
 pydantic-settings==2.6.1
 
-# Utilities
+# ── Utilities ─────────────────────────────────────────────
 python-dotenv==1.0.1
 aiofiles==24.1.0
 httpx==0.28.1

@@ -7,155 +7,135 @@ import { YearsBadge } from '../ui/Badges';
 import { UPLOADS_BASE_URL } from '../../constants/theme';
 import type { Turtle } from '../../types';
 import { Ionicons } from '@expo/vector-icons';
+import { Button } from '../ui/Button';
 
 interface TurtleCardProps {
   turtle: Turtle;
   onPress?: () => void;
-  style?: ViewStyle;
+  style?: ViewStyle | ViewStyle[];
   compact?: boolean;
 }
 
 export function TurtleCard({ turtle, onPress, style, compact = false }: TurtleCardProps) {
+  // Using a beautiful placeholder from Unsplash for missing images
   const imageUri = turtle.profileImage
     ? `${UPLOADS_BASE_URL}${turtle.profileImage}`
-    : null;
+    : 'https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?q=80&w=600&auto=format&fit=crop';
 
   const yearsSinceSeen = Math.floor(
     (Date.now() - new Date(turtle.latestSightingDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25)
   );
 
   return (
-    <TouchableOpacity
-      style={[styles.container, compact && styles.containerCompact, style]}
-      onPress={onPress}
-      activeOpacity={0.8}
-    >
-      {/* Image */}
-      <View style={[styles.imageWrap, compact && styles.imageWrapCompact]}>
-        {imageUri ? (
-          <Image source={{ uri: imageUri }} style={styles.image} resizeMode="cover" />
-        ) : (
-          <View style={styles.imagePlaceholder}>
-            <Ionicons name="fish-outline" size={compact ? 20 : 28} color={Colors.text.muted} />
+    <View style={[styles.container, style]}>
+      {/* Large Image Header */}
+      <View style={styles.imageWrap}>
+        <Image source={{ uri: imageUri }} style={styles.image} resizeMode="cover" />
+        <View style={styles.badgeContainer}>
+          <View style={styles.speciesBadge}>
+            <Text style={styles.speciesBadgeText}>{SpeciesLabels[turtle.species] || turtle.species}</Text>
           </View>
-        )}
+        </View>
       </View>
 
       {/* Content */}
       <View style={styles.content}>
-        <View style={styles.header}>
+        <View style={styles.headerRow}>
           <Text style={styles.turtleId} numberOfLines={1}>{turtle.turtleId}</Text>
-          {!compact && <YearsBadge years={yearsSinceSeen} />}
+          <YearsBadge years={yearsSinceSeen} />
         </View>
 
-        <Text style={styles.species}>{SpeciesLabels[turtle.species] || turtle.species}</Text>
-
-        <View style={styles.meta}>
-          <MetaPill
-            icon="eye-outline"
-            label={`${turtle.totalSightings} sighting${turtle.totalSightings !== 1 ? 's' : ''}`}
-          />
+        <View style={styles.metaRow}>
+          <View style={styles.metaItem}>
+            <Ionicons name="eye-outline" size={14} color={Colors.text.muted} />
+            <Text style={styles.metaText}>{turtle.totalSightings} Sightings</Text>
+          </View>
           {turtle.gender !== 'unknown' && (
-            <MetaPill
-              icon={turtle.gender === 'male' ? 'male-outline' : 'female-outline'}
-              label={turtle.gender}
-            />
+            <View style={styles.metaItem}>
+              <Ionicons name={turtle.gender === 'male' ? 'male-outline' : 'female-outline'} size={14} color={Colors.text.muted} />
+              <Text style={styles.metaText}>{turtle.gender}</Text>
+            </View>
           )}
         </View>
+
+        <Button 
+          label="View Details" 
+          variant="primary" 
+          size="md" 
+          style={styles.actionButton}
+          onPress={onPress}
+          rightIcon={<Ionicons name="arrow-forward" size={16} color={Colors.text.inverse} />}
+        />
       </View>
-
-      <Ionicons
-        name="chevron-forward"
-        size={16}
-        color={Colors.text.muted}
-        style={styles.chevron}
-      />
-    </TouchableOpacity>
-  );
-}
-
-function MetaPill({ icon, label }: { icon: string; label: string }) {
-  return (
-    <View style={styles.metaPill}>
-      <Ionicons name={icon as any} size={11} color={Colors.text.muted} />
-      <Text style={styles.metaLabel}>{label}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: Colors.bg.secondary,
     borderRadius: Radii.lg,
     borderWidth: 1,
-    borderColor: Colors.border.default,
-    padding: Spacing.md,
-    gap: Spacing.md,
-    ...Shadows.sm,
-  },
-  containerCompact: {
-    padding: Spacing.sm,
-    gap: Spacing.sm,
+    borderColor: Colors.border.subtle,
+    overflow: 'hidden',
+    ...Shadows.md,
   },
   imageWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: Radii.md,
-    overflow: 'hidden',
+    width: '100%',
+    aspectRatio: 16 / 9,
     backgroundColor: Colors.bg.tertiary,
-  },
-  imageWrapCompact: {
-    width: 44,
-    height: 44,
-    borderRadius: Radii.sm,
+    position: 'relative',
   },
   image: {
     width: '100%',
     height: '100%',
   },
-  imagePlaceholder: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+  badgeContainer: {
+    position: 'absolute',
+    top: Spacing.md,
+    left: Spacing.md,
+  },
+  speciesBadge: {
+    backgroundColor: 'rgba(7, 29, 44, 0.75)', // Yale Blue 900 with opacity
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: Radii.sm,
+  },
+  speciesBadgeText: {
+    ...TextStyles.label,
+    color: Colors.white,
   },
   content: {
-    flex: 1,
-    gap: 4,
+    padding: Spacing.base,
+    gap: Spacing.md,
   },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.sm,
   },
   turtleId: {
-    ...TextStyles.mono,
-    color: Colors.accent.teal,
-    fontWeight: '700',
+    ...TextStyles.h2,
+    color: Colors.text.primary,
     flex: 1,
   },
-  species: {
-    ...TextStyles.bodySmall,
-    color: Colors.text.secondary,
-  },
-  meta: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginTop: 2,
-  },
-  metaPill: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: Spacing.md,
   },
-  metaLabel: {
-    ...TextStyles.labelSmall,
-    color: Colors.text.muted,
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metaText: {
+    ...TextStyles.bodySmall,
+    color: Colors.text.secondary,
     textTransform: 'capitalize',
   },
-  chevron: {
-    marginLeft: 'auto',
+  actionButton: {
+    marginTop: Spacing.xs,
   },
 });

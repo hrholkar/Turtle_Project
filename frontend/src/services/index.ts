@@ -39,6 +39,7 @@ export const sightingService = {
     longitude?: number;
     sightingDate?: string;
     notes?: string;
+    image_side?: 'AUTO' | 'LEFT' | 'RIGHT';
   }): Promise<IdentifyResult> => {
     const formData = new FormData();
 
@@ -48,11 +49,12 @@ export const sightingService = {
       type: 'image/jpeg',
     } as unknown as Blob);
 
-    if (meta?.location) formData.append('location', meta.location);
-    if (meta?.latitude != null) formData.append('latitude', String(meta.latitude));
+    if (meta?.location)    formData.append('location',    meta.location);
+    if (meta?.latitude  != null) formData.append('latitude',  String(meta.latitude));
     if (meta?.longitude != null) formData.append('longitude', String(meta.longitude));
-    if (meta?.sightingDate) formData.append('sightingDate', meta.sightingDate);
-    if (meta?.notes) formData.append('notes', meta.notes);
+    if (meta?.sightingDate)  formData.append('sightingDate', meta.sightingDate);
+    if (meta?.notes)       formData.append('notes',       meta.notes);
+    if (meta?.image_side)  formData.append('image_side',  meta.image_side);
 
     const res = await api.post<ApiResponse<IdentifyResult>>('/sightings/identify', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },

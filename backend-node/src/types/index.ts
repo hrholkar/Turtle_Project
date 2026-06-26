@@ -86,7 +86,7 @@ export interface IDashboardStats {
   pendingVerifications: number;
 }
 
-// ─── ML Service Types ─────────────────────────────────────────────────────────
+// ─── ML Service Types (v1 legacy) ────────────────────────────────────────────
 
 export interface IMLIdentifyRequest {
   imagePath: string;
@@ -112,6 +112,45 @@ export interface IMLRegisterRequest {
   turtleId: string;
   imagePath: string;
   embeddingVector?: number[];
+}
+
+// ─── ML Service Types (v2 — /predict endpoint) ───────────────────────────────
+
+export type ImageSide = 'AUTO' | 'LEFT' | 'RIGHT';
+
+export interface IMLTopMatch {
+  identity:    string;
+  similarity:  number;          // 0–100 %
+  species?:    string;
+  first_seen?: number;
+  latest_seen?: number;
+  location?:   string;
+}
+
+/** Returned by POST /predict when a match is found */
+export interface IMLPredictMatchedResponse {
+  matched:             true;
+  predicted_species:   string;
+  species_confidence:  number;  // 0–100 %
+  image_side:          string;
+  top_matches:         IMLTopMatch[];
+}
+
+/** Returned by POST /predict when no match exceeds threshold */
+export interface IMLPredictNewTurtleResponse {
+  matched:             false;
+  predicted_species:   string;
+  species_confidence:  number;
+  image_side:          string;
+  message:             'NEW TURTLE DETECTED';
+  new_identity:        string;
+}
+
+export type IMLPredictResponse = IMLPredictMatchedResponse | IMLPredictNewTurtleResponse;
+
+export interface IMLPredictRequest {
+  imagePath:  string;
+  image_side?: ImageSide;
 }
 
 // ─── API Response Types ───────────────────────────────────────────────────────

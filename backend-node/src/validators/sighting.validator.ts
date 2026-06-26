@@ -10,11 +10,12 @@ export const createSightingSchema = z.object({
 });
 
 export const identifySchema = z.object({
-  location: z.string().optional(),
-  latitude: z.coerce.number().min(-90).max(90).optional(),
-  longitude: z.coerce.number().min(-180).max(180).optional(),
+  location:    z.string().optional(),
+  latitude:    z.coerce.number().min(-90).max(90).optional(),
+  longitude:   z.coerce.number().min(-180).max(180).optional(),
   sightingDate: z.string().optional(),
-  notes: z.string().max(2000).optional(),
+  notes:       z.string().max(2000).optional(),
+  image_side:  z.enum(['AUTO', 'LEFT', 'RIGHT']).default('AUTO'),
 });
 
 export const approvePendingSchema = z.object({

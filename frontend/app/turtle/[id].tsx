@@ -18,6 +18,7 @@ import { Spacing, Radii, Shadows, UPLOADS_BASE_URL } from '../../src/constants/t
 import { SightingCard } from '../../src/components/sighting/SightingCard';
 import { Button } from '../../src/components/ui/Button';
 import { YearsBadge } from '../../src/components/ui/Badges';
+import { Card } from '../../src/components/ui/Card';
 import { useTurtle, useTurtleSightings, useDeleteTurtle } from '../../src/hooks/useQueries';
 import { turtleService } from '../../src/services/turtle.service';
 import { useQueryClient } from '@tanstack/react-query';
@@ -36,7 +37,7 @@ export default function TurtleProfileScreen() {
   if (isLoading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color={Colors.accent.teal} size="large" />
+        <ActivityIndicator color={Colors.accent.blue} size="large" />
       </View>
     );
   }
@@ -94,7 +95,7 @@ export default function TurtleProfileScreen() {
           <Image source={{ uri: imageUri }} style={styles.heroImage} resizeMode="cover" />
         ) : (
           <View style={styles.heroPlaceholder}>
-            <Ionicons name="fish-outline" size={64} color={Colors.text.muted} />
+            <Ionicons name="water-outline" size={64} color={Colors.text.disabled} />
             <Text style={styles.heroPlaceholderText}>No profile image</Text>
           </View>
         )}
@@ -118,7 +119,7 @@ export default function TurtleProfileScreen() {
       </View>
 
       {/* ── Turtle Details ───────────────────────────── */}
-      <View style={styles.card}>
+      <Card style={styles.card}>
         <Text style={styles.cardTitle}>Field Record</Text>
 
         <InfoRow label="Turtle ID" value={turtle.turtleId} mono />
@@ -143,10 +144,10 @@ export default function TurtleProfileScreen() {
         {trackingYears > 0 && (
           <InfoRow label="Tracking Duration" value={`${trackingYears} year${trackingYears !== 1 ? 's' : ''}`} />
         )}
-      </View>
+      </Card>
 
       {/* ── Notes ────────────────────────────────────── */}
-      <View style={styles.card}>
+      <Card style={styles.card}>
         <View style={styles.notesHeader}>
           <Text style={styles.cardTitle}>Field Notes</Text>
           <TouchableOpacity onPress={() => { setEditNotes(turtle.notes || ''); setEditing(!editing); }}>
@@ -163,7 +164,7 @@ export default function TurtleProfileScreen() {
               multiline
               numberOfLines={4}
               placeholder="Enter field notes..."
-              placeholderTextColor={Colors.text.muted}
+              placeholderTextColor={Colors.text.disabled}
               textAlignVertical="top"
             />
             <Button label="Save Notes" variant="primary" size="sm" onPress={handleSaveNotes} />
@@ -173,14 +174,14 @@ export default function TurtleProfileScreen() {
             {turtle.notes || 'No field notes recorded.'}
           </Text>
         )}
-      </View>
+      </Card>
 
       {/* ── Sighting History ─────────────────────────── */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Sighting History ({sightingsData?.total || 0})</Text>
 
         {sightingsLoading ? (
-          <ActivityIndicator color={Colors.accent.teal} />
+          <ActivityIndicator color={Colors.accent.blue} />
         ) : sightingsData?.items && sightingsData.items.length > 0 ? (
           <View style={styles.sightingsList}>
             {sightingsData.items.map((sighting) => (
@@ -231,7 +232,7 @@ const infoStyles = StyleSheet.create({
   },
   label: { ...TextStyles.bodySmall, color: Colors.text.muted, flex: 1 },
   value: { ...TextStyles.body, color: Colors.text.primary, flex: 2, textAlign: 'right', textTransform: 'capitalize' },
-  mono: { fontFamily: 'monospace', color: Colors.accent.teal },
+  mono: { fontFamily: 'monospace', color: Colors.accent.blue },
 });
 
 const styles = StyleSheet.create({
@@ -260,7 +261,7 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     fontSize: 22,
     fontWeight: '700',
-    color: Colors.accent.teal,
+    color: Colors.accent.blue,
     letterSpacing: 1,
   },
   heroSpecies: { ...TextStyles.body, color: Colors.text.secondary },
@@ -279,10 +280,6 @@ const styles = StyleSheet.create({
   lastSeenText: { ...TextStyles.body, color: Colors.warm.amber, flex: 1, fontWeight: '500' },
 
   card: {
-    backgroundColor: Colors.bg.secondary,
-    borderRadius: Radii.xl,
-    borderWidth: 1,
-    borderColor: Colors.border.default,
     padding: Spacing.base,
     marginHorizontal: Spacing.base,
     gap: 0,
@@ -290,7 +287,7 @@ const styles = StyleSheet.create({
   cardTitle: { ...TextStyles.h3, color: Colors.text.secondary, marginBottom: Spacing.sm },
 
   notesHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
-  editLink: { ...TextStyles.label, color: Colors.accent.teal },
+  editLink: { ...TextStyles.label, color: Colors.accent.blue },
   notesInput: {
     backgroundColor: Colors.bg.tertiary,
     borderRadius: Radii.md,

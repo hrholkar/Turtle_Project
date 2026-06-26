@@ -22,7 +22,7 @@ interface ButtonProps extends TouchableOpacityProps {
   loading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
-  style?: ViewStyle;
+  style?: ViewStyle | ViewStyle[];
   labelStyle?: TextStyle;
 }
 
@@ -56,7 +56,7 @@ export function Button({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'primary' ? Colors.text.inverse : Colors.accent.teal}
+          color={variant === 'primary' ? Colors.text.inverse : Colors.accent.blue}
         />
       ) : (
         <>
@@ -82,21 +82,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
-    borderRadius: Radii.lg,
+    borderRadius: Radii.lg, // 16px radius
   },
   // Variants
   primary: {
-    backgroundColor: Colors.accent.teal,
+    backgroundColor: Colors.accent.blue,
   },
   secondary: {
-    backgroundColor: Colors.bg.tertiary,
+    backgroundColor: Colors.bg.secondary,
     borderWidth: 1,
-    borderColor: Colors.border.default,
+    borderColor: Colors.border.accent,
   },
   ghost: {
-    backgroundColor: Colors.accent.tealSubtle,
+    backgroundColor: Colors.accent.blueSubtle,
     borderWidth: 1,
-    borderColor: Colors.accent.tealBorder,
+    borderColor: Colors.border.subtle,
   },
   danger: {
     backgroundColor: Colors.status.errorSubtle,
@@ -106,17 +106,17 @@ const styles = StyleSheet.create({
   disabled: {
     opacity: 0.45,
   },
-  // Sizes
-  size_sm: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm - 2 },
-  size_md: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md },
-  size_lg: { paddingHorizontal: Spacing.xl, paddingVertical: Spacing.base },
+  // Sizes (all matching standard height concepts)
+  size_sm: { height: 40, paddingHorizontal: Spacing.md },
+  size_md: { height: 50, paddingHorizontal: Spacing.lg },
+  size_lg: { height: 56, paddingHorizontal: Spacing.xl },
   // Labels
-  label: { fontWeight: '600' },
+  label: { ...TextStyles.h3, fontWeight: '600' },
   label_primary: { color: Colors.text.inverse },
-  label_secondary: { color: Colors.text.primary },
-  label_ghost: { color: Colors.accent.teal },
+  label_secondary: { color: Colors.accent.blue },
+  label_ghost: { color: Colors.accent.blueDark },
   label_danger: { color: Colors.status.error },
-  labelSize_sm: { fontSize: 13 },
-  labelSize_md: { fontSize: 15 },
-  labelSize_lg: { fontSize: 17 },
+  labelSize_sm: { fontSize: 14 },
+  labelSize_md: { fontSize: 16 },
+  labelSize_lg: { fontSize: 18 },
 });

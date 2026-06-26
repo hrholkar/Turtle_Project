@@ -16,6 +16,7 @@ async function bootstrap() {
 
   // ── Static file serving for uploaded images ─────────────────────────────────
   app.use('/uploads', express.static(path.resolve(env.UPLOAD_DIR)));
+  app.use('/uploads/dataset/images', express.static(path.resolve(process.cwd(), '../dataset/turtles-data/data/images')));
 
   // ── API Routes ──────────────────────────────────────────────────────────────
   app.use('/api', apiRoutes);

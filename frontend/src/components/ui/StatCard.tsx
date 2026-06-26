@@ -8,6 +8,7 @@ import {
 import { Colors } from '../../constants/colors';
 import { TextStyles } from '../../constants/typography';
 import { Spacing, Radii } from '../../constants/theme';
+import { Card } from './Card';
 
 interface StatCardProps {
   label: string;
@@ -18,7 +19,7 @@ interface StatCardProps {
 }
 
 const accentMap = {
-  teal: { color: Colors.accent.teal, bg: Colors.accent.tealSubtle },
+  teal: { color: Colors.accent.blue, bg: Colors.accent.blueSubtle },
   amber: { color: Colors.warm.amber, bg: Colors.warm.amberSubtle },
   success: { color: Colors.status.success, bg: Colors.status.successSubtle },
   pending: { color: Colors.status.pending, bg: Colors.status.pendingSubtle },
@@ -28,21 +29,19 @@ export function StatCard({ label, value, unit, accent = 'teal', style }: StatCar
   const { color, bg } = accentMap[accent];
 
   return (
-    <View style={[styles.container, { backgroundColor: Colors.bg.secondary, borderColor: Colors.border.default }, style]}>
+    <Card style={[styles.container, style]}>
       <View style={[styles.indicator, { backgroundColor: bg }]}>
-        <Text style={[styles.value, { color }]}>{value}</Text>
+        <Text style={[styles.value, { color }]} numberOfLines={1} adjustsFontSizeToFit>{value}</Text>
         {unit && <Text style={[styles.unit, { color }]}>{unit}</Text>}
       </View>
-      <Text style={styles.label}>{label}</Text>
-    </View>
+      <Text style={styles.label} numberOfLines={1} adjustsFontSizeToFit>{label}</Text>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    borderRadius: Radii.lg,
-    borderWidth: 1,
     padding: Spacing.md,
     gap: Spacing.sm,
   },
@@ -65,7 +64,7 @@ const styles = StyleSheet.create({
   },
   label: {
     ...TextStyles.label,
-    color: Colors.text.muted,
+    color: Colors.text.secondary,
     letterSpacing: 0.3,
   },
 });

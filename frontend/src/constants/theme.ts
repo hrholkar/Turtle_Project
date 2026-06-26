@@ -15,10 +15,10 @@ export const Spacing = {
 } as const;
 
 export const Radii = {
-  sm: 6,
-  md: 10,
-  lg: 14,
-  xl: 18,
+  sm: 8,
+  md: 12,
+  lg: 16,     // Updated to 16px radius for cards
+  xl: 20,
   '2xl': 24,
   full: 9999,
 } as const;
@@ -26,36 +26,36 @@ export const Radii = {
 export const Shadows = {
   sm: Platform.select({
     ios: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 4,
+      shadowColor: '#071d2c',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
     },
     android: { elevation: 2 },
   }),
   md: Platform.select({
     ios: {
-      shadowColor: '#000',
+      shadowColor: '#071d2c',
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.35,
-      shadowRadius: 8,
+      shadowOpacity: 0.08,
+      shadowRadius: 16,
     },
     android: { elevation: 4 },
   }),
   lg: Platform.select({
     ios: {
-      shadowColor: '#000',
+      shadowColor: '#071d2c',
       shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.4,
-      shadowRadius: 16,
+      shadowOpacity: 0.1,
+      shadowRadius: 24,
     },
     android: { elevation: 8 },
   }),
   teal: Platform.select({
     ios: {
-      shadowColor: '#00D4B4',
+      shadowColor: '#218fde',
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
+      shadowOpacity: 0.2,
       shadowRadius: 12,
     },
     android: { elevation: 6 },
@@ -71,7 +71,7 @@ export const Shadows = {
 // NOTE: Both the phone and the PC must be on the SAME WiFi network.
 // If you change networks, update BACKEND_LAN_IP below.
 //
-const BACKEND_LAN_IP = '192.168.235.49';
+const BACKEND_LAN_IP = '172.20.10.2';
 
 function getApiBaseUrl(): string {
   // In CI/test environments, use localhost

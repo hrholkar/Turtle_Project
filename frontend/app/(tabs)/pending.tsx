@@ -16,6 +16,7 @@ import { TextStyles } from '../../src/constants/typography';
 import { Spacing, Radii, UPLOADS_BASE_URL } from '../../src/constants/theme';
 import { ConfidenceBadge } from '../../src/components/ui/Badges';
 import { Button } from '../../src/components/ui/Button';
+import { Card } from '../../src/components/ui/Card';
 import { usePendingVerifications, useApprovePending, useRejectPending } from '../../src/hooks/useQueries';
 import type { PendingVerification, PendingStatus } from '../../src/types';
 
@@ -89,7 +90,7 @@ export default function PendingScreen() {
       </View>
 
       {isLoading ? (
-        <ActivityIndicator color={Colors.accent.teal} style={{ marginTop: Spacing.xl }} />
+        <ActivityIndicator color={Colors.accent.blue} style={{ marginTop: Spacing.xl }} />
       ) : (
         <FlatList
           data={data?.items || []}
@@ -109,7 +110,7 @@ export default function PendingScreen() {
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Ionicons name="shield-checkmark-outline" size={48} color={Colors.text.muted} />
+              <Ionicons name="shield-checkmark-outline" size={48} color={Colors.text.disabled} />
               <Text style={styles.emptyTitle}>
                 {activeTab === 'pending' ? 'No pending submissions' : `No ${activeTab} records`}
               </Text>
@@ -149,14 +150,14 @@ function PendingCard({
   };
 
   return (
-    <View style={cardStyles.container}>
+    <Card style={cardStyles.container}>
       <TouchableOpacity style={cardStyles.topRow} onPress={onViewDetails} activeOpacity={0.8}>
         {/* Thumbnail */}
         <View style={cardStyles.thumb}>
           {imageUri ? (
             <Image source={{ uri: imageUri }} style={cardStyles.thumbImg} resizeMode="cover" />
           ) : (
-            <Ionicons name="camera-outline" size={22} color={Colors.text.muted} />
+            <Ionicons name="camera-outline" size={22} color={Colors.text.disabled} />
           )}
         </View>
 
@@ -201,7 +202,7 @@ function PendingCard({
             size="sm"
             style={{ flex: 1 }}
             onPress={onApprove}
-            leftIcon={<Ionicons name="checkmark" size={14} color={Colors.accent.teal} />}
+            leftIcon={<Ionicons name="checkmark" size={14} color={Colors.accent.blue} />}
           />
           <Button
             label="Reject"
@@ -213,16 +214,13 @@ function PendingCard({
           />
         </View>
       )}
-    </View>
+    </Card>
   );
 }
 
 const cardStyles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.bg.secondary,
-    borderRadius: Radii.lg,
-    borderWidth: 1,
-    borderColor: Colors.border.default,
+    padding: 0,
     overflow: 'hidden',
   },
   topRow: {
@@ -269,7 +267,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: Colors.bg.secondary,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border.default,
+    borderBottomColor: Colors.border.subtle,
   },
   tab: {
     flex: 1,
@@ -278,10 +276,10 @@ const styles = StyleSheet.create({
   },
   tabActive: {
     borderBottomWidth: 2,
-    borderBottomColor: Colors.accent.teal,
+    borderBottomColor: Colors.accent.blue,
   },
   tabText: { ...TextStyles.label, color: Colors.text.muted },
-  tabTextActive: { color: Colors.accent.teal, fontWeight: '600' },
+  tabTextActive: { color: Colors.accent.blue, fontWeight: '600' },
   list: { padding: Spacing.base, paddingBottom: Spacing['3xl'] },
   empty: { alignItems: 'center', paddingTop: Spacing['4xl'], gap: Spacing.md },
   emptyTitle: { ...TextStyles.h3, color: Colors.text.secondary },

@@ -9,7 +9,7 @@ interface ConfidenceBadgeProps {
   score: number;           // 0–1
   matchStrength?: MatchStrength;
   size?: 'sm' | 'md';
-  style?: ViewStyle;
+  style?: ViewStyle | ViewStyle[];
 }
 
 const strengthLabels: Record<MatchStrength, string> = {
@@ -23,7 +23,7 @@ export function ConfidenceBadge({ score, matchStrength, size = 'md', style }: Co
     score >= 0.85 ? 'strong' : score >= 0.65 ? 'probable' : 'new'
   );
   const color = MatchStrengthColors[strength];
-  const bg = `${color}18`;
+  const bg = `${color}18`; // Subtler bg
 
   const pct = Math.round(score * 100);
 
@@ -44,7 +44,7 @@ export function ConfidenceBadge({ score, matchStrength, size = 'md', style }: Co
 
 interface YearsBadgeProps {
   years: number;
-  style?: ViewStyle;
+  style?: ViewStyle | ViewStyle[];
 }
 
 export function YearsBadge({ years, style }: YearsBadgeProps) {
@@ -73,9 +73,9 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   label: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
-    letterSpacing: 0.8,
+    letterSpacing: 0.5,
   },
   score: {
     ...TextStyles.label,
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   },
   yearsText: {
     ...TextStyles.labelSmall,
-    color: Colors.warm.amber,
+    color: Colors.warm.amberDark, // Darker for better contrast on light mode
     fontWeight: '600',
   },
 });

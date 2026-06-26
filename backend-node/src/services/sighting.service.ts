@@ -7,6 +7,7 @@ import { storage, LocalStorageAdapter } from '../utils/storage';
 import { createError } from '../middleware/errorHandler';
 import { yearsBetween, formatYearsSinceSeen } from '../utils/dateHelper';
 import type { IdentifyInput } from '../validators/sighting.validator';
+import type { ImageSide, IMLPredictMatchedResponse } from '../types';
 import path from 'path';
 
 export class SightingService {
@@ -33,89 +34,129 @@ export class SightingService {
   }
 
   /**
-   * Process an uploaded image through the ML pipeline.
-   * Creates a pending verification or directly logs a sighting.
+   * Process an uploaded image through the v2 ML pipeline.
+   *
+   * Flow:
+   *   1. Call POST /predict with image + image_side
+   *   2a. Matched (similarity ≥ threshold):
+   *       - Look up turtle in DB by identity
+   *       - Record sighting
+   *       - Return { type: 'match', turtle, sighting, ... }
+   *   2b. New turtle (similarity < threshold):
+   *       - Create PendingVerification for admin review
+   *       - Return { type: 'pending', pending, ... }
    */
   static async identifyFromImage(imagePath: string, meta: IdentifyInput) {
-    const filename = path.basename(imagePath);
+    const filename  = path.basename(imagePath);
+    const imageSide = (meta.image_side ?? 'AUTO') as ImageSide;
 
-    // Call ML service
-    const mlResult = await MLService.identify(imagePath);
+    // ── Call v2 ML service ────────────────────────────────────────────────────
+    const v2Result = await MLService.predict(imagePath, imageSide);
 
-    if (mlResult.matchStrength === 'strong' && mlResult.matches.length > 0) {
-      // Strong match — find turtle and record sighting directly
-      const topMatch = mlResult.matches[0];
-      const turtle = await Turtle.findOne({ turtleId: topMatch.turtleId }).lean();
+    if (v2Result.matched) {
+      // ── Strong / probable match branch ────────────────────────────────────
+      const matched = v2Result as IMLPredictMatchedResponse;
+      const topMatch = matched.top_matches[0];
+
+      // Find the turtle in MongoDB by the identity returned by ML
+      const turtle = await Turtle.findOne({ turtleId: topMatch.identity }).lean();
 
       if (turtle) {
-        const sightingDate = meta.sightingDate ? new Date(meta.sightingDate) : new Date();
-        const yearsSince = yearsBetween(turtle.latestSightingDate, sightingDate);
+        const sightingDate  = meta.sightingDate ? new Date(meta.sightingDate) : new Date();
+        const yearsSince    = yearsBetween(turtle.latestSightingDate, sightingDate);
+        const similarity    = parseFloat((topMatch.similarity / 100).toFixed(4));  // 0-1
 
-        // Move image from temp to sightings
+        // Move image from temp → sightings folder
         if (storage instanceof LocalStorageAdapter) {
           storage.moveFile('temporary', 'sightings', filename);
         }
         const imageUrl = storage.getPublicUrl('sightings', filename);
 
         const sighting = await Sighting.create({
-          turtleId: topMatch.turtleId,
-          image: imageUrl,
-          location: meta.location,
-          latitude: meta.latitude,
-          longitude: meta.longitude,
+          turtleId:         topMatch.identity,
+          image:            imageUrl,
+          location:         meta.location,
+          latitude:         meta.latitude,
+          longitude:        meta.longitude,
           sightingDate,
-          confidenceScore: topMatch.score,
+          confidenceScore:  similarity,
           yearsSinceLastSeen: yearsSince,
-          notes: meta.notes,
+          notes:            meta.notes,
         });
 
-        await TurtleService.recordSighting(topMatch.turtleId, sightingDate);
+        await TurtleService.recordSighting(topMatch.identity, sightingDate);
+
+        const matchStrength = similarity >= 0.85 ? 'strong' : 'probable';
 
         return {
-          type: 'match' as const,
+          type:           'match' as const,
           sighting,
           turtle,
-          confidence: topMatch.score,
+          confidence:     similarity,
           yearsSinceSeen: yearsSince,
           yearsSinceLabel: formatYearsSinceSeen(yearsSince),
-          matchStrength: mlResult.matchStrength,
-          allMatches: mlResult.matches,
+          matchStrength,
+          predictedSpecies: matched.predicted_species,
+          imageSide:       matched.image_side,
+          // Full top-3 list for the result screen
+          allMatches: matched.top_matches.map((m, i) => ({
+            turtleId: m.identity,
+            score:    parseFloat((m.similarity / 100).toFixed(4)),
+            rank:     i + 1,
+          })),
         };
       }
     }
 
-    // No strong match — create pending verification
+    // ── New turtle / no DB match branch ───────────────────────────────────────
     const imageUrl = storage.getPublicUrl('temporary', filename);
 
-    const suggestedMatches = await Promise.all(
-      mlResult.matches.map(async (match) => {
-        const turtle = await Turtle.findOne({ turtleId: match.turtleId }).lean();
-        return {
-          turtleId: match.turtleId,
-          turtleName: turtle?.turtleId,
-          confidenceScore: match.score,
-          profileImage: turtle?.profileImage,
-        };
-      })
-    );
+    // Build suggested matches for PendingVerification from top_matches (if any)
+    const suggestedMatches = v2Result.matched
+      ? await Promise.all(
+          (v2Result as IMLPredictMatchedResponse).top_matches.map(async (m) => {
+            const t = await Turtle.findOne({ turtleId: m.identity }).lean();
+            return {
+              turtleId:       m.identity,
+              turtleName:     t?.turtleId,
+              confidenceScore: parseFloat((m.similarity / 100).toFixed(4)),
+              profileImage:   t?.profileImage,
+            };
+          })
+        )
+      : [];
+
+    const topConfidence = v2Result.matched
+      ? parseFloat(((v2Result as IMLPredictMatchedResponse).top_matches[0]?.similarity ?? 0) / 100 + '').valueOf()
+      : 0;
 
     const pending = await PendingVerification.create({
-      uploadedImage: imageUrl,
-      extractedFeatures: mlResult.embeddingVector,
+      uploadedImage:       imageUrl,
       suggestedMatches,
-      topConfidence: mlResult.topScore,
-      submittedLocation: meta.location,
-      submittedLatitude: meta.latitude,
-      submittedLongitude: meta.longitude,
-      submittedDate: meta.sightingDate ? new Date(meta.sightingDate) : new Date(),
-      submittedNotes: meta.notes,
+      topConfidence,
+      submittedLocation:   meta.location,
+      submittedLatitude:   meta.latitude,
+      submittedLongitude:  meta.longitude,
+      submittedDate:       meta.sightingDate ? new Date(meta.sightingDate) : new Date(),
+      submittedNotes:      meta.notes,
     });
 
+    const allMatches = v2Result.matched
+      ? (v2Result as IMLPredictMatchedResponse).top_matches.map((m, i) => ({
+          turtleId: m.identity,
+          score:    parseFloat((m.similarity / 100).toFixed(4)),
+          rank:     i + 1,
+        }))
+      : [];
+
     return {
-      type: 'pending' as const,
+      type:             'pending' as const,
       pending,
-      matchStrength: mlResult.matchStrength,
-      allMatches: mlResult.matches,
+      matchStrength:    'new' as const,
+      predictedSpecies: v2Result.predicted_species,
+      imageSide:        v2Result.image_side,
+      newIdentity:      v2Result.matched ? null : (v2Result as any).new_identity ?? null,
+      allMatches,
     };
   }
 
@@ -123,21 +164,21 @@ export class SightingService {
    * Manually create a sighting (for known turtles).
    */
   static async createManual(params: {
-    turtleId: string;
-    imagePath: string;
-    location?: string;
-    latitude?: number;
-    longitude?: number;
-    sightingDate?: Date;
-    notes?: string;
+    turtleId:       string;
+    imagePath:      string;
+    location?:      string;
+    latitude?:      number;
+    longitude?:     number;
+    sightingDate?:  Date;
+    notes?:         string;
     confidenceScore?: number;
   }) {
     const turtle = await Turtle.findOne({ turtleId: params.turtleId }).lean();
     if (!turtle) throw createError('Turtle not found', 404);
 
     const sightingDate = params.sightingDate || new Date();
-    const yearsSince = yearsBetween(turtle.latestSightingDate, sightingDate);
-    const filename = path.basename(params.imagePath);
+    const yearsSince   = yearsBetween(turtle.latestSightingDate, sightingDate);
+    const filename     = path.basename(params.imagePath);
 
     if (storage instanceof LocalStorageAdapter) {
       storage.moveFile('temporary', 'sightings', filename);
@@ -145,19 +186,18 @@ export class SightingService {
     const imageUrl = storage.getPublicUrl('sightings', filename);
 
     const sighting = await Sighting.create({
-      turtleId: params.turtleId,
-      image: imageUrl,
-      location: params.location,
-      latitude: params.latitude,
-      longitude: params.longitude,
+      turtleId:          params.turtleId,
+      image:             imageUrl,
+      location:          params.location,
+      latitude:          params.latitude,
+      longitude:         params.longitude,
       sightingDate,
-      confidenceScore: params.confidenceScore,
+      confidenceScore:   params.confidenceScore,
       yearsSinceLastSeen: yearsSince,
-      notes: params.notes,
+      notes:             params.notes,
     });
 
     await TurtleService.recordSighting(params.turtleId, sightingDate);
-
     return sighting;
   }
 }

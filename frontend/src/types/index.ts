@@ -99,6 +99,10 @@ export interface IdentifyResult {
   yearsSinceLabel?: string;
   // pending branch
   pending?: PendingVerification;
+  // v2 fields
+  predictedSpecies?: string;          // e.g. "Green Sea turtle"
+  imageSide?: string;                 // "LEFT" | "RIGHT" | "UNKNOWN"
+  newIdentity?: string | null;        // auto-assigned ID for new turtle
   // shared
   matchStrength: MatchStrength;
   allMatches: IdentifyMatch[];

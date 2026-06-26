@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { Colors } from '../../constants/colors';
 import { TextStyles } from '../../constants/typography';
-import { Spacing, Radii, UPLOADS_BASE_URL } from '../../constants/theme';
+import { Spacing, Radii, Shadows, UPLOADS_BASE_URL } from '../../constants/theme';
 import { ConfidenceBadge, YearsBadge } from '../ui/Badges';
 import { Ionicons } from '@expo/vector-icons';
 import type { Sighting } from '../../types';
@@ -11,13 +11,13 @@ interface SightingCardProps {
   sighting: Sighting;
   turtleId?: string;
   onPress?: () => void;
-  style?: ViewStyle;
+  style?: ViewStyle | ViewStyle[];
 }
 
 export function SightingCard({ sighting, turtleId, onPress, style }: SightingCardProps) {
   const imageUri = sighting.image
     ? `${UPLOADS_BASE_URL}${sighting.image}`
-    : null;
+    : 'https://images.unsplash.com/photo-1544605481-9b7e719ab2c7?q=80&w=400&auto=format&fit=crop';
 
   const date = new Date(sighting.sightingDate);
   const dateStr = date.toLocaleDateString('en-US', {
@@ -34,13 +34,7 @@ export function SightingCard({ sighting, turtleId, onPress, style }: SightingCar
     >
       {/* Image thumbnail */}
       <View style={styles.imageWrap}>
-        {imageUri ? (
-          <Image source={{ uri: imageUri }} style={styles.image} resizeMode="cover" />
-        ) : (
-          <View style={styles.imagePlaceholder}>
-            <Ionicons name="camera-outline" size={22} color={Colors.text.muted} />
-          </View>
-        )}
+        <Image source={{ uri: imageUri }} style={styles.image} resizeMode="cover" />
       </View>
 
       {/* Content */}
@@ -58,7 +52,7 @@ export function SightingCard({ sighting, turtleId, onPress, style }: SightingCar
 
         {sighting.location && (
           <View style={styles.locationRow}>
-            <Ionicons name="location-outline" size={12} color={Colors.text.muted} />
+            <Ionicons name="location-outline" size={14} color={Colors.text.muted} />
             <Text style={styles.location} numberOfLines={1}>{sighting.location}</Text>
           </View>
         )}
@@ -77,56 +71,52 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bg.secondary,
     borderRadius: Radii.lg,
     borderWidth: 1,
-    borderColor: Colors.border.default,
+    borderColor: Colors.border.subtle,
     overflow: 'hidden',
-    gap: Spacing.md,
     padding: Spacing.md,
+    gap: Spacing.md,
+    ...Shadows.md,
   },
   imageWrap: {
-    width: 72,
-    height: 72,
+    width: 80,
+    height: 80,
     borderRadius: Radii.md,
     overflow: 'hidden',
     backgroundColor: Colors.bg.tertiary,
     flexShrink: 0,
   },
   image: { width: '100%', height: '100%' },
-  imagePlaceholder: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   content: {
     flex: 1,
-    gap: 4,
+    gap: Spacing.xs,
     justifyContent: 'center',
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: 2,
   },
   date: {
-    ...TextStyles.label,
+    ...TextStyles.h3,
     color: Colors.text.primary,
-    fontWeight: '600',
   },
   turtleId: {
     ...TextStyles.mono,
-    color: Colors.accent.teal,
-    fontSize: 12,
+    color: Colors.accent.blue,
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: 4,
+    marginTop: 2,
   },
   location: {
-    ...TextStyles.labelSmall,
-    color: Colors.text.muted,
+    ...TextStyles.bodySmall,
+    color: Colors.text.secondary,
     flex: 1,
   },
   badge: {
-    marginTop: 2,
+    marginTop: Spacing.xs,
   },
 });

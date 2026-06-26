@@ -7,14 +7,16 @@ import {
   RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
+  ImageBackground,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../src/constants/colors';
 import { TextStyles } from '../../src/constants/typography';
-import { Spacing, Radii } from '../../src/constants/theme';
+import { Spacing, Radii, Shadows } from '../../src/constants/theme';
 import { StatCard } from '../../src/components/ui/StatCard';
 import { SightingCard } from '../../src/components/sighting/SightingCard';
+import { Button } from '../../src/components/ui/Button';
 import { useDashboardStats, useRecentSightings, usePendingVerifications } from '../../src/hooks/useQueries';
 
 export default function HomeScreen() {
@@ -42,6 +44,12 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
+  const today = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+
   return (
     <ScrollView
       style={styles.screen}
@@ -51,54 +59,35 @@ export default function HomeScreen() {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={Colors.accent.teal}
+          tintColor={Colors.accent.blue}
         />
       }
     >
-      {/* ── Header Banner ─────────────────────────────────────── */}
-      <View style={styles.banner}>
-        <View style={styles.bannerText}>
-          <Text style={styles.greeting}>Conservation Field Log</Text>
-          <Text style={styles.bannerTitle}>Sea Turtle{'\n'}Re-Identification</Text>
-        </View>
-        <View style={styles.bannerIcon}>
-          <Ionicons name="fish" size={52} color={Colors.accent.teal} style={{ opacity: 0.25 }} />
+      {/* ── Welcome Header ─────────────────────────────────────── */}
+      <View style={styles.welcomeHeader}>
+        <View style={styles.welcomeTextGroup}>
+          <Text style={styles.welcomeDate}>{today}</Text>
+          <Text style={styles.welcomeTitle}>Welcome back, Researcher</Text>
         </View>
       </View>
 
       {/* ── Quick Actions ─────────────────────────────────────── */}
       <View style={styles.quickActions}>
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.actionBtnPrimary]}
+        <Button 
+          label="Identify Turtle" 
+          variant="primary" 
+          size="lg" 
+          style={{ flex: 1 }}
           onPress={() => router.push('/(tabs)/upload')}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="scan" size={22} color={Colors.text.inverse} />
-          <Text style={styles.actionBtnTextPrimary}>Identify Turtle</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.actionBtnSecondary]}
-          onPress={() => router.push('/(tabs)/pending')}
-          activeOpacity={0.8}
-        >
-          <View style={styles.actionBtnIconRow}>
-            <Ionicons name="shield-checkmark-outline" size={22} color={Colors.accent.teal} />
-            {(pendingData?.total || 0) > 0 && (
-              <View style={styles.actionBadge}>
-                <Text style={styles.actionBadgeText}>{pendingData!.total}</Text>
-              </View>
-            )}
-          </View>
-          <Text style={styles.actionBtnTextSecondary}>Review Pending</Text>
-        </TouchableOpacity>
+          leftIcon={<Ionicons name="scan" size={22} color={Colors.text.inverse} />}
+        />
       </View>
 
       {/* ── Stats Strip ───────────────────────────────────────── */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>OVERVIEW</Text>
+        <Text style={styles.sectionLabel}>PLATFORM STATISTICS</Text>
         {statsLoading ? (
-          <ActivityIndicator color={Colors.accent.teal} style={{ marginTop: Spacing.lg }} />
+          <ActivityIndicator color={Colors.accent.blue} style={{ marginTop: Spacing.lg }} />
         ) : (
           <View style={styles.statsGrid}>
             <StatCard
@@ -107,7 +96,7 @@ export default function HomeScreen() {
               accent="teal"
             />
             <StatCard
-              label="Total Sightings"
+              label="Sightings"
               value={stats?.totalSightings ?? 0}
               accent="teal"
             />
@@ -117,7 +106,7 @@ export default function HomeScreen() {
               accent="success"
             />
             <StatCard
-              label="New This Month"
+              label="New Month"
               value={stats?.newTurtlesThisMonth ?? 0}
               accent="amber"
             />
@@ -128,14 +117,14 @@ export default function HomeScreen() {
       {/* ── Recent Sightings ──────────────────────────────────── */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>RECENT SIGHTINGS</Text>
+          <Text style={styles.sectionLabel}>LATEST ACTIVITY</Text>
           <TouchableOpacity onPress={() => router.push('/(tabs)/turtles')}>
-            <Text style={styles.seeAll}>See all →</Text>
+            <Text style={styles.seeAll}>See all</Text>
           </TouchableOpacity>
         </View>
 
         {sightingsLoading ? (
-          <ActivityIndicator color={Colors.accent.teal} style={{ marginTop: Spacing.lg }} />
+          <ActivityIndicator color={Colors.accent.blue} style={{ marginTop: Spacing.lg }} />
         ) : recentSightings && recentSightings.length > 0 ? (
           <View style={styles.sightingsList}>
             {recentSightings.map((sighting) => (
@@ -149,9 +138,9 @@ export default function HomeScreen() {
           </View>
         ) : (
           <EmptyState
-            icon="camera-outline"
-            title="No sightings yet"
-            subtitle="Upload a turtle image to record the first sighting"
+            icon="water-outline"
+            title="No recent activity"
+            subtitle="Recent sightings and identifications will appear here."
           />
         )}
       </View>
@@ -165,7 +154,7 @@ export default function HomeScreen() {
 function EmptyState({ icon, title, subtitle }: { icon: string; title: string; subtitle: string }) {
   return (
     <View style={emptyStyles.container}>
-      <Ionicons name={icon as any} size={40} color={Colors.text.muted} />
+      <Ionicons name={icon as any} size={48} color={Colors.text.disabled} />
       <Text style={emptyStyles.title}>{title}</Text>
       <Text style={emptyStyles.subtitle}>{subtitle}</Text>
     </View>
@@ -173,86 +162,54 @@ function EmptyState({ icon, title, subtitle }: { icon: string; title: string; su
 }
 
 const emptyStyles = StyleSheet.create({
-  container: { alignItems: 'center', paddingVertical: Spacing['3xl'], gap: Spacing.sm },
+  container: { 
+    alignItems: 'center', 
+    paddingVertical: Spacing['3xl'], 
+    paddingHorizontal: Spacing.xl,
+    gap: Spacing.sm,
+    backgroundColor: Colors.bg.secondary,
+    borderRadius: Radii.lg,
+    borderWidth: 1,
+    borderColor: Colors.border.subtle,
+    ...Shadows.sm,
+  },
   title: { ...TextStyles.h3, color: Colors.text.secondary },
-  subtitle: { ...TextStyles.bodySmall, color: Colors.text.muted, textAlign: 'center', maxWidth: 260 },
+  subtitle: { ...TextStyles.body, color: Colors.text.muted, textAlign: 'center' },
 });
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.bg.primary },
   content: { padding: Spacing.base, gap: Spacing.xl },
 
-  // ── Banner ──────────────────────────────────────────────────
-  banner: {
-    backgroundColor: Colors.bg.secondary,
-    borderRadius: Radii.xl,
-    borderWidth: 1,
-    borderColor: Colors.border.default,
-    padding: Spacing.xl,
-    flexDirection: 'row',
-    alignItems: 'center',
-    overflow: 'hidden',
+  // ── Welcome Header ──────────────────────────────────────────
+  welcomeHeader: {
+    paddingVertical: Spacing.sm,
   },
-  bannerText: { flex: 1 },
-  greeting: {
-    ...TextStyles.overline,
-    color: Colors.accent.teal,
-    letterSpacing: 1.5,
-    marginBottom: Spacing.xs,
+  welcomeTextGroup: {
+    gap: 2,
   },
-  bannerTitle: {
-    fontSize: 26,
-    fontWeight: '700',
+  welcomeDate: {
+    ...TextStyles.label,
+    color: Colors.text.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  welcomeTitle: {
+    ...TextStyles.h1,
     color: Colors.text.primary,
-    lineHeight: 32,
-    letterSpacing: -0.5,
   },
-  bannerIcon: { opacity: 1 },
 
   // ── Quick Actions ───────────────────────────────────────────
   quickActions: { flexDirection: 'row', gap: Spacing.md },
-  actionBtn: {
-    flex: 1,
-    borderRadius: Radii.lg,
-    paddingVertical: Spacing.base,
-    paddingHorizontal: Spacing.md,
-    alignItems: 'center',
-    gap: Spacing.sm,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  actionBtnPrimary: { backgroundColor: Colors.accent.teal },
-  actionBtnSecondary: {
-    backgroundColor: Colors.bg.secondary,
-    borderWidth: 1,
-    borderColor: Colors.border.default,
-  },
-  actionBtnTextPrimary: { ...TextStyles.h3, color: Colors.text.inverse },
-  actionBtnTextSecondary: { ...TextStyles.h3, color: Colors.text.primary },
-  actionBtnIconRow: { position: 'relative' },
-  actionBadge: {
-    position: 'absolute',
-    top: -6,
-    right: -8,
-    backgroundColor: Colors.status.error,
-    borderRadius: 999,
-    minWidth: 16,
-    height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
-  },
-  actionBadgeText: { color: '#fff', fontSize: 9, fontWeight: '700' },
 
   // ── Sections ────────────────────────────────────────────────
   section: { gap: Spacing.md },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sectionLabel: {
     ...TextStyles.overline,
-    color: Colors.text.muted,
-    letterSpacing: 1.5,
+    color: Colors.text.secondary,
   },
-  seeAll: { ...TextStyles.label, color: Colors.accent.teal },
+  seeAll: { ...TextStyles.label, color: Colors.accent.blue },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md },
   sightingsList: { gap: Spacing.md },
 });

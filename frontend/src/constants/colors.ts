@@ -1,28 +1,45 @@
 /**
  * TurtleTrack Design System — Color Tokens
  *
- * Deep ocean-inspired palette for a professional conservation research application.
- * Dark mode first. Every color has a semantic name — never use raw hex in components.
+ * Yale Blue palette for a premium, clean, modern UI.
  */
 
 export const Colors = {
+  primary: {
+    50: '#e9f4fc',
+    100: '#d3e9f8',
+    200: '#a6d2f2',
+    300: '#7abceb',
+    400: '#4ea6e4',
+    500: '#218fde',
+    600: '#1b73b1',
+    700: '#145685',
+    800: '#0d3959',
+    900: '#071d2c',
+    950: '#05141f',
+  },
+  
   // ── Backgrounds ────────────────────────────────────────────────────────────
   bg: {
-    primary: '#0B1929',      // App background — deep midnight navy
-    secondary: '#0F2137',    // Card/sheet surfaces
-    tertiary: '#162B44',     // Elevated elements (modals, dropdowns)
-    overlay: '#0B192980',    // Semi-transparent overlay
+    primary: '#e9f4fc',      // Yale Blue 50
+    secondary: '#FFFFFF',    // Card surfaces
+    tertiary: '#d3e9f8',     // Subtle elevated
+    overlay: 'rgba(7, 29, 44, 0.5)', // Yale Blue 900 semi-transparent
   },
 
-  // ── Accent — Bioluminescent Teal ──────────────────────────────────────────
+  // ── Accent — Yale Blue 500 ──────────────────────────────────────────
   accent: {
-    teal: '#00D4B4',
-    tealDark: '#009B84',
-    tealSubtle: 'rgba(0, 212, 180, 0.10)',
-    tealBorder: 'rgba(0, 212, 180, 0.25)',
+    blue: '#218fde',
+    blueDark: '#1b73b1',
+    blueSubtle: '#d3e9f8',
+    blueBorder: '#7abceb',
+    teal: '#218fde', // Mapping legacy accent colors to yale blue
+    tealDark: '#1b73b1',
+    tealSubtle: '#d3e9f8',
+    tealBorder: '#7abceb',
   },
 
-  // ── Warm — Amber (time, history, age) ────────────────────────────────────
+  // ── Warm / Muted ────────────────────────────────────
   warm: {
     amber: '#F0A030',
     amberDark: '#C07820',
@@ -32,31 +49,31 @@ export const Colors = {
 
   // ── Text ──────────────────────────────────────────────────────────────────
   text: {
-    primary: '#E8F4F8',
-    secondary: '#A8C4D8',
-    muted: '#6B8FA8',
-    disabled: '#3D6080',
-    inverse: '#0B1929',
-    onAccent: '#0B1929',
+    primary: '#071d2c',      // Yale Blue 900
+    secondary: '#145685',    // Yale Blue 700
+    muted: '#1b73b1',        // Yale Blue 600
+    disabled: '#7abceb',     // Yale Blue 300
+    inverse: '#FFFFFF',      // White
+    onAccent: '#FFFFFF',     // White
   },
 
   // ── Border ────────────────────────────────────────────────────────────────
   border: {
-    default: '#1E3A5F',
-    subtle: '#162B44',
-    accent: 'rgba(0, 212, 180, 0.25)',
+    default: '#d3e9f8',      // Yale Blue 100
+    subtle: '#e9f4fc',       // Yale Blue 50
+    accent: '#7abceb',       // Yale Blue 300
   },
 
   // ── Status ────────────────────────────────────────────────────────────────
   status: {
     success: '#22C55E',
-    successSubtle: 'rgba(34, 197, 94, 0.12)',
+    successSubtle: '#DCFCE7',
     warning: '#F59E0B',
-    warningSubtle: 'rgba(245, 158, 11, 0.12)',
+    warningSubtle: '#FEF3C7',
     error: '#EF4444',
-    errorSubtle: 'rgba(239, 68, 68, 0.12)',
+    errorSubtle: '#FEE2E2',
     pending: '#8B5CF6',
-    pendingSubtle: 'rgba(139, 92, 246, 0.12)',
+    pendingSubtle: '#EDE9FE',
   },
 
   // ── Special ───────────────────────────────────────────────────────────────

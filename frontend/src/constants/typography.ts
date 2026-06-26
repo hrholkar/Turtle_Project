@@ -17,8 +17,8 @@ export const Typography = {
   sizes: {
     xs: 11,
     sm: 13,
-    base: 15,
-    md: 17,
+    base: 16,
+    md: 18,
     lg: 20,
     xl: 24,
     '2xl': 28,
@@ -58,14 +58,14 @@ export const TextStyles = {
   displayMedium: { fontSize: 28, fontWeight: '700' as const, letterSpacing: -0.5 },
 
   // ── Headings ──────────────────────────────────────────────────────────────
-  h1: { fontSize: 24, fontWeight: '700' as const, letterSpacing: -0.3 },
-  h2: { fontSize: 20, fontWeight: '600' as const, letterSpacing: -0.2 },
-  h3: { fontSize: 17, fontWeight: '600' as const },
+  h1: { fontSize: 28, fontWeight: '700' as const, letterSpacing: -0.3 }, // Heading 28 Bold
+  h2: { fontSize: 20, fontWeight: '600' as const, letterSpacing: -0.2 }, // Section 20 SemiBold
+  h3: { fontSize: 18, fontWeight: '500' as const },                      // Card Title 18 Medium
 
   // ── Body ──────────────────────────────────────────────────────────────────
-  bodyLarge: { fontSize: 17, fontWeight: '400' as const, lineHeight: 26 },
-  body: { fontSize: 15, fontWeight: '400' as const, lineHeight: 23 },
-  bodySmall: { fontSize: 13, fontWeight: '400' as const, lineHeight: 20 },
+  bodyLarge: { fontSize: 18, fontWeight: '400' as const, lineHeight: 26 },
+  body: { fontSize: 16, fontWeight: '400' as const, lineHeight: 24 },    // Body 16 Regular
+  bodySmall: { fontSize: 13, fontWeight: '400' as const, lineHeight: 20 },// Caption 13 Regular
 
   // ── Labels ────────────────────────────────────────────────────────────────
   label: { fontSize: 13, fontWeight: '500' as const, letterSpacing: 0.2 },

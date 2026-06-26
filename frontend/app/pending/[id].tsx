@@ -17,6 +17,7 @@ import { TextStyles } from '../../src/constants/typography';
 import { Spacing, Radii, UPLOADS_BASE_URL } from '../../src/constants/theme';
 import { ConfidenceBadge } from '../../src/components/ui/Badges';
 import { Button } from '../../src/components/ui/Button';
+import { Card } from '../../src/components/ui/Card';
 import { usePendingItem, useApprovePending, useRejectPending } from '../../src/hooks/useQueries';
 
 export default function PendingDetailScreen() {
@@ -34,7 +35,7 @@ export default function PendingDetailScreen() {
   const [notes, setNotes] = useState('');
 
   if (isLoading) {
-    return <View style={styles.loading}><ActivityIndicator color={Colors.accent.teal} /></View>;
+    return <View style={styles.loading}><ActivityIndicator color={Colors.accent.blue} /></View>;
   }
   if (!pending) {
     return <View style={styles.loading}><Text style={{ color: Colors.text.primary }}>Not found.</Text></View>;
@@ -82,7 +83,7 @@ export default function PendingDetailScreen() {
       )}
 
       {/* Info */}
-      <View style={styles.card}>
+      <Card style={styles.card}>
         <Text style={styles.cardTitle}>Submission Details</Text>
         <InfoRow label="Submitted" value={date} />
         {pending.submittedLocation && <InfoRow label="Location" value={pending.submittedLocation} />}
@@ -95,11 +96,11 @@ export default function PendingDetailScreen() {
             <ConfidenceBadge score={pending.topConfidence} />
           </View>
         )}
-      </View>
+      </Card>
 
       {/* Suggested Matches */}
       {pending.suggestedMatches.length > 0 && (
-        <View style={styles.card}>
+        <Card style={styles.card}>
           <Text style={styles.cardTitle}>ML Suggested Matches</Text>
           {pending.suggestedMatches.map((match, i) => (
             <TouchableOpacity
@@ -119,29 +120,29 @@ export default function PendingDetailScreen() {
               )}
             </TouchableOpacity>
           ))}
-        </View>
+        </Card>
       )}
 
       {/* Only show approve panel if status is pending */}
       {pending.status === 'pending' && (
         <>
           {/* Approve Mode Selector */}
-          <View style={styles.card}>
+          <Card style={styles.card}>
             <Text style={styles.cardTitle}>Resolution Action</Text>
             <View style={styles.modeRow}>
               <TouchableOpacity
                 style={[styles.modeBtn, approveMode === 'new' && styles.modeBtnActive]}
                 onPress={() => setApproveMode('new')}
               >
-                <Ionicons name="add-circle-outline" size={18} color={approveMode === 'new' ? Colors.accent.teal : Colors.text.muted} />
-                <Text style={[styles.modeBtnText, approveMode === 'new' && { color: Colors.accent.teal }]}>New Turtle</Text>
+                <Ionicons name="add-circle-outline" size={18} color={approveMode === 'new' ? Colors.accent.blue : Colors.text.muted} />
+                <Text style={[styles.modeBtnText, approveMode === 'new' && { color: Colors.accent.blue }]}>New Turtle</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modeBtn, approveMode === 'existing' && styles.modeBtnActive]}
                 onPress={() => setApproveMode('existing')}
               >
-                <Ionicons name="link-outline" size={18} color={approveMode === 'existing' ? Colors.accent.teal : Colors.text.muted} />
-                <Text style={[styles.modeBtnText, approveMode === 'existing' && { color: Colors.accent.teal }]}>Link Existing</Text>
+                <Ionicons name="link-outline" size={18} color={approveMode === 'existing' ? Colors.accent.blue : Colors.text.muted} />
+                <Text style={[styles.modeBtnText, approveMode === 'existing' && { color: Colors.accent.blue }]}>Link Existing</Text>
               </TouchableOpacity>
             </View>
 
@@ -151,7 +152,7 @@ export default function PendingDetailScreen() {
                 <TextInput
                   style={styles.fieldInput}
                   placeholder="e.g. TT-A1B2C3D4"
-                  placeholderTextColor={Colors.text.muted}
+                  placeholderTextColor={Colors.text.disabled}
                   value={targetTurtleId}
                   onChangeText={setTargetTurtleId}
                 />
@@ -164,14 +165,14 @@ export default function PendingDetailScreen() {
                 <TextInput
                   style={[styles.fieldInput, styles.fieldInputMulti]}
                   placeholder="Optional field notes..."
-                  placeholderTextColor={Colors.text.muted}
+                  placeholderTextColor={Colors.text.disabled}
                   value={notes}
                   onChangeText={setNotes}
                   multiline
                 />
               </View>
             )}
-          </View>
+          </Card>
 
           {/* Action Buttons */}
           <View style={styles.actions}>
@@ -233,10 +234,6 @@ const styles = StyleSheet.create({
   image: { width: '100%', height: '100%' },
 
   card: {
-    backgroundColor: Colors.bg.secondary,
-    borderRadius: Radii.xl,
-    borderWidth: 1,
-    borderColor: Colors.border.default,
     padding: Spacing.base,
     gap: Spacing.sm,
     marginHorizontal: Spacing.base,
@@ -250,7 +247,7 @@ const styles = StyleSheet.create({
   matchItem: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: Colors.border.subtle },
   matchRank: { ...TextStyles.labelSmall, color: Colors.text.muted, width: 20 },
   matchThumb: { width: 32, height: 32, borderRadius: Radii.sm },
-  matchId: { ...TextStyles.mono, color: Colors.accent.teal, flex: 1 },
+  matchId: { ...TextStyles.mono, color: Colors.accent.blue, flex: 1 },
 
   modeRow: { flexDirection: 'row', gap: Spacing.md },
   modeBtn: {
@@ -262,10 +259,10 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderRadius: Radii.md,
     borderWidth: 1,
-    borderColor: Colors.border.default,
+    borderColor: Colors.border.subtle,
     backgroundColor: Colors.bg.tertiary,
   },
-  modeBtnActive: { borderColor: Colors.accent.tealBorder, backgroundColor: Colors.accent.tealSubtle },
+  modeBtnActive: { borderColor: Colors.accent.blueBorder, backgroundColor: Colors.accent.blueSubtle },
   modeBtnText: { ...TextStyles.label, color: Colors.text.muted },
 
   field: { gap: Spacing.sm },
@@ -278,7 +275,7 @@ const styles = StyleSheet.create({
     ...TextStyles.body,
     color: Colors.text.primary,
     borderWidth: 1,
-    borderColor: Colors.border.default,
+    borderColor: Colors.border.subtle,
   },
   fieldInputMulti: { minHeight: 80, textAlignVertical: 'top', paddingVertical: Spacing.md },
 

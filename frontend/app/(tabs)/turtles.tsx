@@ -17,13 +17,13 @@ import { TurtleCard } from '../../src/components/turtle/TurtleCard';
 import { useTurtles } from '../../src/hooks/useQueries';
 import type { TurtleSpecies } from '../../src/types';
 
-const SPECIES_FILTERS: Array<{ key: TurtleSpecies | 'all'; label: string }> = [
+const SPECIES_FILTERS: Array<{ key: TurtleSpecies | 'all' | 'olive_ridley'; label: string }> = [
   { key: 'all', label: 'All' },
-  { key: 'green', label: 'Green' },
-  { key: 'loggerhead', label: 'Loggerhead' },
-  { key: 'hawksbill', label: 'Hawksbill' },
+  { key: 'green', label: 'Green Sea turtle' },
   { key: 'leatherback', label: 'Leatherback' },
-  { key: 'unknown', label: 'Unknown' },
+  { key: 'hawksbill', label: 'Hawksbill' },
+  { key: 'loggerhead', label: 'Loggerhead' },
+  { key: 'olive_ridley', label: 'Olive Ridley' },
 ];
 
 export default function TurtlesScreen() {
@@ -45,7 +45,7 @@ export default function TurtlesScreen() {
         <TextInput
           style={styles.searchInput}
           placeholder="Search by ID, location, notes..."
-          placeholderTextColor={Colors.text.muted}
+          placeholderTextColor={Colors.text.disabled}
           value={search}
           onChangeText={setSearch}
           returnKeyType="search"
@@ -54,12 +54,13 @@ export default function TurtlesScreen() {
       </View>
 
       {/* ── Species Filter ───────────────────────────────── */}
-      <FlatList
-        data={SPECIES_FILTERS}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={(item) => item.key}
-        contentContainerStyle={styles.filterRow}
+      <View style={{ height: 60 }}>
+        <FlatList
+          data={SPECIES_FILTERS}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item) => item.key}
+          contentContainerStyle={styles.filterRow}
         renderItem={({ item }) => {
           const isActive = (item.key === 'all' && !species) || item.key === species;
           return (
@@ -75,6 +76,7 @@ export default function TurtlesScreen() {
           );
         }}
       />
+      </View>
 
       {/* ── Results Count ────────────────────────────────── */}
       {!isLoading && data && (
@@ -83,7 +85,7 @@ export default function TurtlesScreen() {
 
       {/* ── Turtle List ──────────────────────────────────── */}
       {isLoading ? (
-        <ActivityIndicator color={Colors.accent.teal} style={{ marginTop: Spacing.xl }} />
+        <ActivityIndicator color={Colors.accent.blue} style={{ marginTop: Spacing.xl }} />
       ) : (
         <FlatList
           data={data?.items || []}
@@ -101,7 +103,7 @@ export default function TurtlesScreen() {
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Ionicons name="fish-outline" size={48} color={Colors.text.muted} />
+              <Ionicons name="water-outline" size={48} color={Colors.text.disabled} />
               <Text style={styles.emptyTitle}>No turtles found</Text>
               <Text style={styles.emptySubtitle}>
                 {search ? 'Try a different search term' : 'Identify your first turtle to get started'}
@@ -123,7 +125,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     backgroundColor: Colors.bg.secondary,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border.default,
+    borderBottomColor: Colors.border.subtle,
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.md,
   },
@@ -144,18 +146,18 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm - 2,
     borderRadius: Radii.full,
     borderWidth: 1,
-    borderColor: Colors.border.default,
+    borderColor: Colors.border.subtle,
     backgroundColor: Colors.bg.secondary,
   },
   filterChipActive: {
-    backgroundColor: Colors.accent.tealSubtle,
-    borderColor: Colors.accent.tealBorder,
+    backgroundColor: Colors.accent.blueSubtle,
+    borderColor: Colors.accent.blueBorder,
   },
   filterChipText: {
     ...TextStyles.label,
     color: Colors.text.muted,
   },
-  filterChipTextActive: { color: Colors.accent.teal },
+  filterChipTextActive: { color: Colors.accent.blue },
 
   resultsCount: {
     ...TextStyles.labelSmall,

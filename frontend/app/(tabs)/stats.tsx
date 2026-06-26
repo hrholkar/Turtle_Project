@@ -11,6 +11,7 @@ import { TextStyles } from '../../src/constants/typography';
 import { Spacing, Radii } from '../../src/constants/theme';
 import { useDashboardStats, useSpeciesBreakdown } from '../../src/hooks/useQueries';
 import { Ionicons } from '@expo/vector-icons';
+import { Card } from '../../src/components/ui/Card';
 
 export default function StatsScreen() {
   const { data: stats, isLoading } = useDashboardStats();
@@ -19,7 +20,7 @@ export default function StatsScreen() {
   if (isLoading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color={Colors.accent.teal} size="large" />
+        <ActivityIndicator color={Colors.accent.blue} size="large" />
       </View>
     );
   }
@@ -38,7 +39,7 @@ export default function StatsScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>CONSERVATION HEALTH</Text>
 
-        <View style={styles.healthCard}>
+        <Card style={styles.healthCard}>
           <View style={styles.returnRateCircle}>
             <Text style={styles.returnRateValue}>{returnRate}%</Text>
             <Text style={styles.returnRateLabel}>Return Rate</Text>
@@ -54,7 +55,7 @@ export default function StatsScreen() {
               icon="add-circle-outline"
               label="Avg sightings/turtle"
               value={stats?.avgSightingsPerTurtle ?? 0}
-              color={Colors.accent.teal}
+              color={Colors.accent.blue}
             />
             <HealthRow
               icon="calendar-outline"
@@ -62,22 +63,16 @@ export default function StatsScreen() {
               value={stats?.newTurtlesThisMonth ?? 0}
               color={Colors.warm.amber}
             />
-            <HealthRow
-              icon="hourglass-outline"
-              label="Pending reviews"
-              value={stats?.pendingVerifications ?? 0}
-              color={Colors.status.pending}
-            />
           </View>
-        </View>
+        </Card>
       </View>
 
       {/* ── Key Metrics ───────────────────────────────── */}
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>KEY METRICS</Text>
         <View style={styles.metricsGrid}>
-          <MetricBlock label="Total Turtles" value={stats?.totalTurtles ?? 0} color={Colors.accent.teal} />
-          <MetricBlock label="Total Sightings" value={stats?.totalSightings ?? 0} color={Colors.accent.teal} />
+          <MetricBlock label="Total Turtles" value={stats?.totalTurtles ?? 0} color={Colors.accent.blue} />
+          <MetricBlock label="Total Sightings" value={stats?.totalSightings ?? 0} color={Colors.accent.blue} />
         </View>
       </View>
 
@@ -85,7 +80,7 @@ export default function StatsScreen() {
       {speciesData && speciesData.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>SPECIES BREAKDOWN</Text>
-          <View style={styles.speciesCard}>
+          <Card style={styles.speciesCard}>
             {speciesData.map((item: { species: string; count: number }, i: number) => {
               const max = speciesData[0].count;
               const pct = max > 0 ? item.count / max : 0;
@@ -103,12 +98,12 @@ export default function StatsScreen() {
                 </View>
               );
             })}
-          </View>
+          </Card>
         </View>
       )}
 
       {/* ── Phase 2 Teaser ───────────────────────────── */}
-      <View style={styles.phase2Card}>
+      <Card style={styles.phase2Card}>
         <View style={styles.phase2Icon}>
           <Ionicons name="time-outline" size={24} color={Colors.status.pending} />
         </View>
@@ -118,7 +113,7 @@ export default function StatsScreen() {
             Phase 2 feature — AI-powered return date prediction for individual turtles coming soon.
           </Text>
         </View>
-      </View>
+      </Card>
 
       <View style={{ height: Spacing['2xl'] }} />
     </ScrollView>
@@ -139,10 +134,10 @@ function HealthRow({ icon, label, value, color }: { icon: string; label: string;
 
 function MetricBlock({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <View style={metricStyles.block}>
+    <Card style={metricStyles.block}>
       <Text style={[metricStyles.value, { color }]}>{value}</Text>
       <Text style={metricStyles.label}>{label}</Text>
-    </View>
+    </Card>
   );
 }
 
@@ -156,13 +151,9 @@ const healthStyles = StyleSheet.create({
 const metricStyles = StyleSheet.create({
   block: {
     flex: 1,
-    backgroundColor: Colors.bg.secondary,
-    borderRadius: Radii.lg,
-    borderWidth: 1,
-    borderColor: Colors.border.default,
-    padding: Spacing.base,
     alignItems: 'center',
     gap: 4,
+    padding: Spacing.base,
   },
   value: { fontSize: 36, fontWeight: '700', letterSpacing: -1 },
   label: { ...TextStyles.label, color: Colors.text.muted },
@@ -174,17 +165,13 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.base, gap: Spacing.xl },
 
   section: { gap: Spacing.md },
-  sectionLabel: { ...TextStyles.overline, color: Colors.text.muted, letterSpacing: 1.5 },
+  sectionLabel: { ...TextStyles.overline, color: Colors.text.secondary },
 
   healthCard: {
-    backgroundColor: Colors.bg.secondary,
-    borderRadius: Radii.xl,
-    borderWidth: 1,
-    borderColor: Colors.border.default,
-    padding: Spacing.base,
     flexDirection: 'row',
     gap: Spacing.lg,
     alignItems: 'center',
+    padding: Spacing.base,
   },
   returnRateCircle: {
     width: 90,
@@ -204,10 +191,6 @@ const styles = StyleSheet.create({
   metricsGrid: { flexDirection: 'row', gap: Spacing.md },
 
   speciesCard: {
-    backgroundColor: Colors.bg.secondary,
-    borderRadius: Radii.xl,
-    borderWidth: 1,
-    borderColor: Colors.border.default,
     padding: Spacing.base,
     gap: Spacing.md,
   },
@@ -220,18 +203,16 @@ const styles = StyleSheet.create({
     borderRadius: Radii.full,
     overflow: 'hidden',
   },
-  speciesBar: { height: '100%', backgroundColor: Colors.accent.teal, borderRadius: Radii.full },
+  speciesBar: { height: '100%', backgroundColor: Colors.accent.blue, borderRadius: Radii.full },
   speciesCount: { width: 30, ...TextStyles.labelSmall, color: Colors.text.muted, textAlign: 'right' },
 
   phase2Card: {
     backgroundColor: Colors.status.pendingSubtle,
-    borderRadius: Radii.xl,
-    borderWidth: 1,
     borderColor: `${Colors.status.pending}30`,
-    padding: Spacing.base,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
+    padding: Spacing.base,
   },
   phase2Icon: {
     width: 44,
