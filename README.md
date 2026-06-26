@@ -67,6 +67,53 @@ Similarity thresholds:
 - 65–85% → Probable match (human review)
 - < 65% → New turtle (pending verification)
 
+# Dataset
+
+> **Note:** The original training dataset (~2 GB) is **not included** in this repository.
+
+## Download Dataset
+
+Download the dataset from:
+
+**Google Drive**
+
+https://drive.google.com/drive/folders/1KlYa9zXtceGbg0GbLovBjwAsK-xKSkPN?usp=sharing
+
+---
+
+## Folder Structure
+
+After downloading, extract the dataset into the project root:
+
+```text
+Turtle_Project/
+│
+├── backend-node/
+├── backend-ml/
+├── frontend/
+└── dataset/
+```
+
+---
+
+## Important
+
+This repository already contains:
+
+- Trained Species Classifier
+- Label Encoder
+- Embeddings
+- FAISS Index
+- Metadata Store
+
+Therefore, **the project can be run without downloading the dataset**.
+
+The dataset is only required if you want to:
+
+- Retrain the ML model
+- Generate new embeddings
+- Rebuild the FAISS index
+
 ## Documentation
 
 - [INSTALLATION.md](docs/INSTALLATION.md)
