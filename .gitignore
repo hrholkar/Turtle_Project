@@ -81,3 +81,13 @@ Thumbs.db
 # ── Logs ─────────────────────────────────────────────
 logs/
 *.log
+
+# Dataset
+dataset/
+
+# MongoDB Atlas migration scripts
+backend-node/checkMigrationState.js
+backend-node/performMigration.js
+backend-node/testAtlas.js
+backend-node/testTLS.js
+backend-node/transfer.js
