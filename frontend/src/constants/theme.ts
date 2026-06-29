@@ -74,27 +74,31 @@ export const Shadows = {
 const BACKEND_LAN_IP = '172.20.10.2';
 
 function getApiBaseUrl(): string {
-  // In CI/test environments, use localhost
+  // Production: Always use the global cloud backend for the built APK
   if (typeof __DEV__ !== 'undefined' && !__DEV__) {
-    return 'http://localhost:3000/api';
+    return 'https://turtletrack-backend-node.onrender.com/api';
   }
 
-  // Try to get host from expo-constants (works in LAN mode)
+  // Development: Try to get host from expo-constants (works in LAN mode)
   const expoHost = Constants.expoConfig?.hostUri;
   if (expoHost) {
     const host = expoHost.split(':')[0];
-    // In LAN mode, hostUri has the LAN IP — use it for the backend too
     if (host && host !== 'localhost' && host !== '127.0.0.1' && !host.includes('.exp.direct')) {
       return `http://${host}:3000/api`;
     }
   }
 
-  // Tunnel mode or fallback: use the hardcoded LAN IP
-  // The phone must be on the same WiFi as the dev machine
+  // Development Fallback: use the hardcoded LAN IP
   return `http://${BACKEND_LAN_IP}:3000/api`;
 }
 
 function getUploadsBaseUrl(): string {
+  // Production: Always use the global cloud backend for the built APK
+  if (typeof __DEV__ !== 'undefined' && !__DEV__) {
+    return 'https://turtletrack-backend-node.onrender.com';
+  }
+
+  // Development: LAN mode
   const expoHost = Constants.expoConfig?.hostUri;
   if (expoHost) {
     const host = expoHost.split(':')[0];
@@ -102,6 +106,8 @@ function getUploadsBaseUrl(): string {
       return `http://${host}:3000`;
     }
   }
+  
+  // Development Fallback
   return `http://${BACKEND_LAN_IP}:3000`;
 }
 
