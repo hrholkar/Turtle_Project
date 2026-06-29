@@ -29,5 +29,8 @@ export const env = {
   MAX_FILE_SIZE: parseInt(process.env.MAX_FILE_SIZE || '10485760', 10),
   ALLOWED_MIME_TYPES: (process.env.ALLOWED_MIME_TYPES || 'image/jpeg,image/png,image/webp').split(','),
   CORS_ORIGIN: process.env.CORS_ORIGIN || '*',
-  STORAGE_ADAPTER: (process.env.STORAGE_ADAPTER || 'local') as 'local' | 's3',
+  STORAGE_ADAPTER: (process.env.STORAGE_ADAPTER || 'local') as 'local' | 's3' | 'cloudinary',
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || '',
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || '',
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || '',
 } as const;

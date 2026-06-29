@@ -5,13 +5,18 @@ import { env } from '../config/env';
 export type StorageFolder = 'turtles' | 'sightings' | 'temporary';
 
 /**
- * Storage Adapter Interface — supports local and future S3
+ * Storage Adapter Interface
  */
 export interface StorageAdapter {
   getFilePath(folder: StorageFolder, filename: string): string;
   getPublicUrl(folder: StorageFolder, filename: string): string;
   deleteFile(folder: StorageFolder, filename: string): Promise<void>;
   fileExists(folder: StorageFolder, filename: string): Promise<boolean>;
+  
+  /**
+   * Moves a temporary file to permanent storage and returns its public URL.
+   */
+  saveFile(fromFolder: StorageFolder, toFolder: StorageFolder, filename: string): Promise<string>;
 }
 
 /**
@@ -61,6 +66,11 @@ export class LocalStorageAdapter implements StorageAdapter {
     fs.renameSync(src, dst);
     return dst;
   }
+
+  async saveFile(fromFolder: StorageFolder, toFolder: StorageFolder, filename: string): Promise<string> {
+    this.moveFile(fromFolder, toFolder, filename);
+    return this.getPublicUrl(toFolder, filename);
+  }
 }
 
 /**
@@ -91,10 +101,55 @@ export class S3StorageAdapter implements StorageAdapter {
   async fileExists(_folder: StorageFolder, _filename: string): Promise<boolean> {
     throw new Error('S3StorageAdapter.fileExists() not implemented');
   }
+  async saveFile(_fromFolder: StorageFolder, _toFolder: StorageFolder, _filename: string): Promise<string> {
+    throw new Error('S3StorageAdapter.saveFile() not implemented');
+  }
+}
+
+/**
+ * Cloudinary Storage Adapter
+ */
+import { CloudinaryService } from '../services/cloudinary.service';
+
+export class CloudinaryStorageAdapter implements StorageAdapter {
+  private localAdapter = new LocalStorageAdapter();
+
+  getFilePath(folder: StorageFolder, filename: string): string {
+    // For local operations (like ML processing) we still use the temporary file path
+    return this.localAdapter.getFilePath(folder, filename);
+  }
+
+  getPublicUrl(_folder: StorageFolder, _filename: string): string {
+    // We cannot predict the exact URL without uploading first.
+    // The actual URL is returned by saveFile.
+    return ''; 
+  }
+
+  async deleteFile(folder: StorageFolder, filename: string): Promise<void> {
+    // Optional: implement Cloudinary deletion API here using public_id
+    await this.localAdapter.deleteFile(folder, filename);
+  }
+
+  async fileExists(folder: StorageFolder, filename: string): Promise<boolean> {
+    return this.localAdapter.fileExists(folder, filename);
+  }
+
+  async saveFile(fromFolder: StorageFolder, toFolder: StorageFolder, filename: string): Promise<string> {
+    const localPath = this.localAdapter.getFilePath(fromFolder, filename);
+    const url = await CloudinaryService.uploadImage(localPath, `turtletrack/${toFolder}`);
+    
+    // Clean up local temp file
+    if (fs.existsSync(localPath)) {
+      fs.unlinkSync(localPath);
+    }
+    
+    return url;
+  }
 }
 
 // ── Singleton export ──────────────────────────────────────────────────────────
-export const storage: StorageAdapter =
-  env.STORAGE_ADAPTER === 's3'
-    ? new S3StorageAdapter()
-    : new LocalStorageAdapter();
+export const storage: StorageAdapter = (() => {
+  if (env.STORAGE_ADAPTER === 'cloudinary') return new CloudinaryStorageAdapter();
+  if (env.STORAGE_ADAPTER === 's3') return new S3StorageAdapter();
+  return new LocalStorageAdapter();
+})();

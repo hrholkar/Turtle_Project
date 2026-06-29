@@ -66,11 +66,8 @@ export class SightingService {
         const yearsSince    = yearsBetween(turtle.latestSightingDate, sightingDate);
         const similarity    = parseFloat((topMatch.similarity / 100).toFixed(4));  // 0-1
 
-        // Move image from temp → sightings folder
-        if (storage instanceof LocalStorageAdapter) {
-          storage.moveFile('temporary', 'sightings', filename);
-        }
-        const imageUrl = storage.getPublicUrl('sightings', filename);
+        // Move image from temp → permanent storage (local or Cloudinary)
+        const imageUrl = await storage.saveFile('temporary', 'sightings', filename);
 
         const sighting = await Sighting.create({
           turtleId:         topMatch.identity,
@@ -109,7 +106,7 @@ export class SightingService {
     }
 
     // ── New turtle / no DB match branch ───────────────────────────────────────
-    const imageUrl = storage.getPublicUrl('temporary', filename);
+    const imageUrl = await storage.saveFile('temporary', 'temporary', filename);
 
     // Build suggested matches for PendingVerification from top_matches (if any)
     const suggestedMatches = v2Result.matched
@@ -180,10 +177,7 @@ export class SightingService {
     const yearsSince   = yearsBetween(turtle.latestSightingDate, sightingDate);
     const filename     = path.basename(params.imagePath);
 
-    if (storage instanceof LocalStorageAdapter) {
-      storage.moveFile('temporary', 'sightings', filename);
-    }
-    const imageUrl = storage.getPublicUrl('sightings', filename);
+    const imageUrl = await storage.saveFile('temporary', 'sightings', filename);
 
     const sighting = await Sighting.create({
       turtleId:          params.turtleId,

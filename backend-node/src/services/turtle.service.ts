@@ -62,10 +62,9 @@ export class TurtleService {
     const firstSightingDate = new Date(input.firstSightingDate);
 
     let profileImage: string | undefined;
-    if (profileImagePath && storage instanceof LocalStorageAdapter) {
+    if (profileImagePath) {
       const filename = path.basename(profileImagePath);
-      storage.moveFile('temporary', 'turtles', filename);
-      profileImage = storage.getPublicUrl('turtles', filename);
+      profileImage = await storage.saveFile('temporary', 'turtles', filename);
     }
 
     const turtle = await Turtle.create({
@@ -117,11 +116,15 @@ export class TurtleService {
   static async updateProfileImage(turtleId: string, tempImagePath: string) {
     const filename = path.basename(tempImagePath);
 
-    if (storage instanceof LocalStorageAdapter) {
-      storage.moveFile('temporary', 'turtles', filename);
+    // Re-register with ML FIRST, because saveFile might delete the local temp file (in Cloudinary mode)
+    try {
+      await MLService.register({ turtleId, imagePath: tempImagePath });
+    } catch (err) {
+      console.warn(`[Turtle] ML re-registration failed for ${turtleId}:`, err);
     }
 
-    const profileImage = storage.getPublicUrl('turtles', filename);
+    const profileImage = await storage.saveFile('temporary', 'turtles', filename);
+
     const turtle = await Turtle.findOneAndUpdate(
       { turtleId },
       { $set: { profileImage } },
@@ -129,16 +132,6 @@ export class TurtleService {
     ).lean();
 
     if (!turtle) throw createError(`Turtle not found: ${turtleId}`, 404);
-
-    // Re-register with ML
-    try {
-      const fullPath = storage instanceof LocalStorageAdapter
-        ? storage.getFilePath('turtles', filename)
-        : tempImagePath;
-      await MLService.register({ turtleId, imagePath: fullPath });
-    } catch {
-      console.warn(`[Turtle] ML re-registration failed for ${turtleId}`);
-    }
 
     return turtle;
   }
