@@ -1,0 +1,43 @@
+services:
+  # 1. Node.js Backend API
+  - type: web
+    name: turtletrack-backend-node
+    env: docker
+    rootDir: backend-node
+    region: ohio
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: ML_SERVICE_URL
+        fromService:
+          type: web
+          name: turtletrack-backend-ml
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: MONGO_URI
+        sync: false # You will need to paste your MongoDB Atlas URI here in the Render Dashboard
+      - key: UPLOAD_DIR
+        value: ../uploads
+      - key: CORS_ORIGIN
+        value: "*"
+
+  # 2. Python ML Backend
+  - type: web
+    name: turtletrack-backend-ml
+    env: docker
+    rootDir: backend-ml
+    region: ohio
+    plan: free
+    envVars:
+      - key: ML_PORT
+        value: 8000
+      - key: ML_HOST
+        value: 0.0.0.0
+      - key: ML_WORKERS
+        value: 1
+      - key: FAISS_INDEX_PATH
+        value: ./storage/index/turtles.index
+      - key: FAISS_ID_MAP_PATH
+        value: ./storage/index/id_map.json
