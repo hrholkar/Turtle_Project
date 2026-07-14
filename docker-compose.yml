@@ -1,0 +1,70 @@
+version: '3.9'
+
+services:
+  # ── MongoDB ──────────────────────────────────────────────────
+  mongo:
+    image: mongo:7.0
+    container_name: turtletrack-mongo
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: turtletrack
+    networks:
+      - turtletrack-network
+
+  # ── Node Backend ─────────────────────────────────────────────
+  backend-node:
+    build:
+      context: ./backend-node
+      dockerfile: Dockerfile
+    container_name: turtletrack-backend
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./uploads:/app/uploads
+      - ./backend-node:/app
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      MONGO_URI: mongodb://mongo:27017/turtletrack
+      ML_SERVICE_URL: http://backend-ml:8000
+      UPLOAD_DIR: /app/uploads
+    depends_on:
+      - mongo
+      - backend-ml
+    networks:
+      - turtletrack-network
+
+  # ── Python ML Service ─────────────────────────────────────────
+  backend-ml:
+    build:
+      context: ./backend-ml
+      dockerfile: Dockerfile
+    container_name: turtletrack-ml
+    restart: unless-stopped
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./uploads:/app/uploads
+      - ml_index:/app/storage/index
+      - ./backend-ml:/app
+    environment:
+      ML_PORT: 8000
+      ML_UPLOAD_DIR: /app/uploads
+      FAISS_INDEX_PATH: /app/storage/index/turtles.index
+      FAISS_ID_MAP_PATH: /app/storage/index/id_map.json
+    networks:
+      - turtletrack-network
+
+volumes:
+  mongo_data:
+  ml_index:
+
+networks:
+  turtletrack-network:
+    driver: bridge

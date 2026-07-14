@@ -1,0 +1,125 @@
+TurtleTrack — ML Pipeline Documentation
+=========================================
+
+OVERVIEW
+--------
+TurtleTrack uses a pre-trained convolutional neural network (MobileNetV2) to extract
+visual embeddings from turtle images. These embeddings are stored in a FAISS
+(Facebook AI Similarity Search) index and compared against new sightings using
+cosine similarity to identify individual turtles.
+
+This approach was selected over alternatives (Siamese Networks, re-ID models) for the
+following reasons:
+
+  1. ZERO TRAINING DATA REQUIRED
+     MobileNetV2, pre-trained on ImageNet, already generalizes to fine-grained texture
+     and pattern recognition. Siamese networks require hundreds of matched pairs per
+     individual, which is infeasible for a conservation prototype.
+
+  2. LOCAL-FIRST DEPLOYMENT
+     Runs entirely on CPU. No GPU required. Processing time: ~100-300ms per image
+     on a modern laptop.
+
+  3. HIGH UPGRADE PATH
+     The feature extractor can be swapped for a fine-tuned EfficientNet-B4 or ViT model
+     by changing a single class (FeatureExtractor._build_model) without touching any
+     other code.
+
+  4. PROVEN FOR CONSERVATION APPLICATIONS
+     Similar approaches are used in HotSpotter (zebra/giraffe ID), Wildlife Insights
+     (camera trap species detection), and other field conservation platforms.
+
+
+PIPELINE STAGES
+---------------
+
+Stage 1: Image Ingestion
+  - Accept: JPEG, PNG, WebP
+  - Source: Mobile camera or gallery via React Native Expo
+  - Transfer: Multipart form upload to Node.js backend → forwarded to ML service
+
+Stage 2: Preprocessing (app/services/preprocessing/image_processor.py)
+  - EXIF auto-rotation correction (critical for mobile photos)
+  - RGBA → RGB conversion with white background
+  - Grayscale → RGB conversion
+  - Resize to 256×256 (aspect-ratio preserving)
+  - Center crop to 224×224 (MobileNetV2 input size)
+  - Normalize with ImageNet statistics:
+      Mean: [0.485, 0.456, 0.406]
+      Std:  [0.229, 0.224, 0.225]
+  - Optional: CLAHE enhancement for low-contrast neck patterns
+
+Stage 3: Feature Extraction (app/services/extraction/feature_extractor.py)
+  - Model: MobileNetV2 (ImageNet pre-trained)
+  - Modified: Classification head replaced with Identity()
+  - Output: 1280-dimensional feature vector from global average pooling layer
+  - Post-processing: L2 normalization (converts to unit vector)
+  - Result: 1280-dim float32 embedding vector
+
+Stage 4: Similarity Search (app/services/matching/faiss_index.py)
+  - Index type: faiss.IndexFlatIP (exact inner product search)
+  - For L2-normalized vectors, inner product == cosine similarity
+  - Returns top-K nearest neighbors with similarity scores
+  - Thread-safe: write operations protected by threading.Lock
+  - Persistence: index + turtle_id_map saved to disk after every write
+  - Startup: loads persisted index automatically
+
+Stage 5: Score Classification (app/services/similarity/scorer.py)
+  Thresholds (configurable via .env):
+    MATCH_THRESHOLD_HIGH = 0.85  →  "strong"   match
+    MATCH_THRESHOLD_LOW  = 0.65  →  "probable" match
+    Score < 0.65                 →  "new"       turtle
+
+  Interpretation:
+    - "strong"   → Auto-suggest match; sighting recorded automatically
+    - "probable" → Suggested match; admin verification required
+    - "new"      → No match; create pending verification
+
+
+FAISS INDEX MANAGEMENT
+----------------------
+
+Data stored:
+  - faiss.IndexFlatIP: stores the raw embedding vectors
+  - id_map.json: maps FAISS integer indices to turtleId strings
+
+Files:
+  - storage/index/turtles.index  ← FAISS binary index
+  - storage/index/id_map.json    ← Turtle ID mapping
+
+Logical deletion:
+  - FAISS IndexFlatIP does not support true deletion
+  - Deleted turtles are removed from id_map only
+  - Their embedding vectors remain in the FAISS index but are never returned
+
+Scale considerations:
+  - IndexFlatIP: exact search, O(n) per query
+  - Suitable for up to ~10,000 turtles on CPU in <200ms
+  - For >10,000: migrate to IndexIVFFlat with nlist clusters
+  - For >100,000: add HNSW or GPU acceleration
+
+
+UPGRADE PATH
+------------
+
+Phase 1 (current):
+  MobileNetV2 + IndexFlatIP
+  → Zero training, CPU-only, works for hundreds to low thousands of turtles
+
+Phase 2 (future):
+  Option A: Fine-tune EfficientNet-B4 on a turtle neck pattern dataset
+  Option B: Use a dedicated wildlife re-ID model (e.g., WildMe, HotSpotter)
+  Option C: Migrate to IndexIVFFlat for larger scale
+
+Phase 3 (future):
+  Return prediction using LSTM/time-series model on sighting patterns
+  Stub endpoint: POST /ml/predict-return/:turtle_id
+
+
+IMAGE TIPS FOR BEST ACCURACY
+-----------------------------
+  - Photograph the neck/head region specifically (most discriminative)
+  - Use natural or diffuse lighting (avoid harsh shadows)
+  - Keep the camera steady (blur reduces embedding quality)
+  - Multiple images from different angles improve registration
+  - CLAHE preprocessing helps with underwater or low-contrast images

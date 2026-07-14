@@ -1,0 +1,54 @@
+{
+  "version": "2.0.0",
+  "description": "TurtleTrack ML Service — Runtime Configuration",
+
+  "model": {
+    "backbone":        "mobilenet_v2",
+    "embedding_dim":   1280,
+    "input_size":      224,
+    "weights":         "IMAGENET1K_V1",
+    "normalize":       "l2"
+  },
+
+  "classifier": {
+    "type":            "SVC",
+    "kernel":          "rbf",
+    "C":               10.0,
+    "gamma":           "scale",
+    "probability":     true,
+    "preprocessing":   "StandardScaler"
+  },
+
+  "faiss": {
+    "index_type":      "IndexFlatIP",
+    "metric":          "inner_product",
+    "note":            "Equivalent to cosine similarity on L2-normalised vectors"
+  },
+
+  "thresholds": {
+    "new_turtle":      0.80,
+    "strong_match":    0.85,
+    "probable_match":  0.65
+  },
+
+  "pipeline": {
+    "top_k":           3,
+    "side_filter":     true,
+    "species_filter":  true,
+    "auto_side_threshold": 5.0
+  },
+
+  "training_pipeline": [
+    "python ml/generate_embeddings.py",
+    "python ml/train_species_classifier.py",
+    "python ml/build_faiss.py"
+  ],
+
+  "artifacts": {
+    "embeddings":           "storage/models/embeddings.pkl",
+    "species_classifier":   "storage/models/species_classifier.pkl",
+    "label_encoder":        "storage/models/label_encoder.pkl",
+    "faiss_v2_index":       "storage/index/turtles_v2.index",
+    "metadata_store":       "storage/index/metadata_store.json"
+  }
+}

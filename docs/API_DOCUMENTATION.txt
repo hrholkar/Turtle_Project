@@ -1,0 +1,269 @@
+TurtleTrack — API Documentation
+=================================
+
+Base URL: http://localhost:3000/api
+Content-Type: application/json (unless multipart/form-data for file uploads)
+
+All responses follow this envelope:
+  { "success": true/false, "data": {...}, "error": "...", "message": "..." }
+
+Paginated responses include:
+  { "items": [...], "total": 100, "page": 1, "limit": 20, "pages": 5 }
+
+================================================================
+HEALTH
+================================================================
+
+GET /api/health
+  Returns operational status of Node backend and ML service.
+
+  Response:
+    {
+      "success": true,
+      "data": {
+        "status": "operational",
+        "services": {
+          "database": "connected",
+          "ml": "connected"
+        }
+      }
+    }
+
+================================================================
+DASHBOARD
+================================================================
+
+GET /api/dashboard/stats
+  Returns conservation overview statistics.
+
+  Response data:
+    {
+      "totalTurtles": 42,
+      "totalSightings": 138,
+      "returningTurtles": 29,
+      "newTurtlesThisMonth": 3,
+      "avgSightingsPerTurtle": 3.3,
+      "pendingVerifications": 5
+    }
+
+GET /api/dashboard/species-breakdown
+  Returns turtle count grouped by species.
+
+  Response data: [{ "species": "green", "count": 15 }, ...]
+
+GET /api/dashboard/sighting-trend
+  Returns monthly sighting counts for the past 12 months.
+
+  Response data: [{ "_id": { "year": 2024, "month": 6 }, "count": 12 }, ...]
+
+GET /api/dashboard/return-rate
+  Returns percentage of turtles seen more than once.
+
+  Response data: { "returnRate": 69 }
+
+================================================================
+TURTLES
+================================================================
+
+GET /api/turtles
+  List all turtles with optional filtering.
+
+  Query Parameters:
+    page        (int)    Default: 1
+    limit       (int)    Default: 20, Max: 100
+    species     (string) Filter by species
+    gender      (string) Filter by gender
+    search      (string) Search by ID, notes, birth location
+    sortBy      (string) latestSightingDate | firstSightingDate | totalSightings | createdAt
+    sortOrder   (string) asc | desc
+
+  Response: Paginated<Turtle>
+
+GET /api/turtles/:id
+  Get a single turtle by turtleId (e.g. TT-A1B2C3D4).
+
+  Response data: Turtle object
+
+GET /api/turtles/:id/sightings
+  Get all sightings for a specific turtle.
+
+  Query: page, limit
+  Response: Paginated<Sighting>
+
+GET /api/turtles/:id/timeline
+  [PHASE 2 STUB] Returns empty timeline for future prediction feature.
+
+POST /api/turtles
+  Create a new turtle record.
+
+  Body (multipart/form-data):
+    species         (string)  green | loggerhead | leatherback | hawksbill |
+                              kemp_ridley | olive_ridley | flatback | unknown
+    gender          (string)  male | female | unknown
+    firstSightingDate (string) ISO date or YYYY-MM-DD (required)
+    birthLocation   (string)  Optional
+    birthDate       (string)  Optional ISO date
+    notes           (string)  Optional, max 2000 chars
+    profileImage    (file)    Optional JPEG/PNG/WebP image
+
+  Response: 201 Created with Turtle object
+
+PUT /api/turtles/:id
+  Update a turtle's metadata.
+
+  Body (JSON): Any subset of { species, gender, birthLocation, birthDate, notes }
+  Response: Updated Turtle object
+
+DELETE /api/turtles/:id
+  Delete a turtle and all its sightings. Also removes from ML index.
+
+  Response: { "message": "Turtle TT-X deleted" }
+
+================================================================
+SIGHTINGS
+================================================================
+
+GET /api/sightings
+  List all sightings, newest first.
+
+  Query: page, limit
+  Response: Paginated<Sighting>
+
+GET /api/sightings/recent
+  Get the most recent sightings.
+
+  Query: limit (default 10)
+  Response: Sighting[]
+
+GET /api/sightings/:id
+  Get a single sighting by MongoDB _id.
+
+  Response data: Sighting object
+
+POST /api/sightings/identify        ← MAIN IDENTIFICATION ENDPOINT
+  Upload a turtle image and run the full ML identification pipeline.
+
+  Body (multipart/form-data):
+    image           (file)    Required JPEG/PNG/WebP image
+    location        (string)  Optional location name
+    latitude        (number)  Optional GPS latitude
+    longitude       (number)  Optional GPS longitude
+    sightingDate    (string)  Optional ISO date (defaults to now)
+    notes           (string)  Optional field notes
+
+  Response 200 (match found):
+    {
+      "success": true,
+      "data": {
+        "type": "match",
+        "sighting": { ...Sighting },
+        "turtle": { ...Turtle },
+        "confidence": 0.923,
+        "yearsSinceSeen": 5,
+        "yearsSinceLabel": "Last recorded 5 years ago",
+        "matchStrength": "strong",
+        "allMatches": [...]
+      }
+    }
+
+  Response 202 (no match / pending):
+    {
+      "success": true,
+      "data": {
+        "type": "pending",
+        "pending": { ...PendingVerification },
+        "matchStrength": "new",
+        "allMatches": [...]
+      }
+    }
+
+================================================================
+PENDING VERIFICATION
+================================================================
+
+GET /api/pending
+  List pending verifications with optional status filter.
+
+  Query:
+    status  (string)  pending | approved | rejected
+    page, limit
+
+  Response: Paginated<PendingVerification>
+
+GET /api/pending/:id
+  Get a single pending verification.
+
+  Response data: PendingVerification object
+
+POST /api/pending/:id/approve
+  Approve a pending verification.
+
+  Body (JSON):
+    turtleId      (string)  Optional — if provided, links to existing turtle
+    species       (string)  Required for new turtle creation
+    gender        (string)  Required for new turtle creation
+    birthLocation (string)  Optional
+    notes         (string)  Optional
+
+  If turtleId is provided: creates a Sighting linked to that turtle.
+  If turtleId is omitted:  creates a new Turtle from the submitted image.
+
+  Response:
+    { "data": { "resolvedTurtleId": "TT-X", "status": "approved" } }
+
+POST /api/pending/:id/reject
+  Reject a pending verification.
+
+  Response:
+    { "data": { "status": "rejected" } }
+
+================================================================
+PHASE 2 STUBS
+================================================================
+
+POST /api/predict-return/:turtleId
+  [PHASE 2 STUB] Return prediction — not implemented.
+
+  Response:
+    { "data": { "predictedReturnYear": null, "confidence": null, "status": "not_implemented" } }
+
+================================================================
+ML SERVICE API (http://localhost:8000)
+================================================================
+
+POST /ml/identify
+  Runs the full identification pipeline on an uploaded image.
+
+  Body (multipart/form-data):
+    file    (image)   Required
+    top_k   (int)     Number of results (default: 5)
+
+  Response:
+    {
+      "matches": [{ "turtle_id": "TT-X", "score": 0.923, "rank": 1 }],
+      "top_score": 0.923,
+      "is_new_turtle": false,
+      "match_strength": "strong",
+      "processing_time_ms": 142.5,
+      "embedding_vector": [...]
+    }
+
+POST /ml/register
+  Registers a turtle's embedding in the FAISS index.
+
+  Body (multipart/form-data):
+    turtle_id         (string)   Required
+    file              (image)    Optional — extract embedding from image
+    embedding_vector  (JSON str) Optional — use pre-computed embedding
+
+DELETE /ml/embeddings/:turtle_id
+  Removes a turtle from the FAISS index.
+
+GET /ml/health
+  Service health check.
+
+GET /ml/stats
+  Index statistics and model info.
+
+GET /ml/predict-return/:turtle_id
+  [PHASE 2 STUB] Not implemented.
