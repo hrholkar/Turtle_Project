@@ -381,7 +381,7 @@ export default function ResultScreen() {
 
   const imagePath = result?.imageUrl;
   const sightingImageUri = imagePath ? `${UPLOADS_BASE_URL}${imagePath}` : undefined;
-  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(result?.type === 'match' ? result.allMatches?.[0]?.turtleId : null);
+  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(result?.allMatches?.[0]?.turtleId || null);
   const [showTop3, setShowTop3] = useState(false);
 
   if (!result) {
@@ -392,8 +392,8 @@ export default function ResultScreen() {
     );
   }
 
-  const isMatch = result.type === 'match';
-  const strength = result.matchStrength;
+  const isMatch = true;
+  const strength = 'strong';
   const strengthColor = MatchStrengthColors[strength];
   const top3 = result.allMatches?.slice(0, 3) ?? [];
   const selectedMatch = top3.find(m => m.turtleId === selectedMatchId) || top3[0];
